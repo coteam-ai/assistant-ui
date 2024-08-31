@@ -147,16 +147,19 @@ export type CoreAssistantContentPart =
 export type CoreSystemMessage = {
   role: "system";
   content: [TextContentPart];
+  id?: string | undefined;
 };
 
 export type CoreUserMessage = {
   role: "user";
   content: CoreUserContentPart[];
+  id?: string | undefined;
 };
 
 export type CoreAssistantMessage = {
   role: "assistant";
   content: CoreAssistantContentPart[];
+  id?: string | undefined;
 };
 
 export type CoreMessage =
