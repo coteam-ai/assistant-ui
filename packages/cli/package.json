@@ -28,7 +28,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   },
   "homepage": "https://assistant-ui.com/",
   "repository": {
