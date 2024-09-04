@@ -18,6 +18,7 @@ export const toCoreMessage = (message: ThreadMessage): CoreMessage => {
           }
           return part;
         }),
+        id: message.id,
       };
 
     case "user":
@@ -27,12 +28,14 @@ export const toCoreMessage = (message: ThreadMessage): CoreMessage => {
           if (part.type === "ui") throw new Error("UI parts are not supported");
           return part;
         }),
+        id: message.id,
       };
 
     case "system":
       return {
         role,
         content: message.content,
+        id: message.id,
       };
 
     default: {

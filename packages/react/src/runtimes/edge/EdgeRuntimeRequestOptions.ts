@@ -35,6 +35,7 @@ const CoreToolCallContentPartSchema = z.object({
 // args is required but unknown;
 
 const CoreUserMessageSchema = z.object({
+  id: z.string().optional(),
   role: z.literal("user"),
   content: z
     .array(
@@ -47,6 +48,7 @@ const CoreUserMessageSchema = z.object({
 });
 
 const CoreAssistantMessageSchema = z.object({
+  id: z.string().optional(),
   role: z.literal("assistant"),
   content: z
     .array(
@@ -59,6 +61,7 @@ const CoreAssistantMessageSchema = z.object({
 });
 
 const CoreSystemMessageSchema = z.object({
+  id: z.string().optional(),
   role: z.literal("system"),
   content: z.tuple([TextContentPartSchema]),
 });
