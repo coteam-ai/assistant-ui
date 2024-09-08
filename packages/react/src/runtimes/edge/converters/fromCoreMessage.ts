@@ -22,7 +22,7 @@ export const fromCoreMessage = (
   } = {},
 ): ThreadMessage => {
   const commonProps = {
-    id,
+    id : message.id ?? id, // reuse message.id if present
     createdAt: new Date(),
   };
 
