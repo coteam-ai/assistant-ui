@@ -112,12 +112,13 @@ const Composer: FC = () => {
     const text = composer.text;
     if (!text) return;
 
-    composer.setText("");
+    composer.reset();
 
     useThreadActions.getState().append({
       parentId: useThreadMessages.getState().at(-1)?.id ?? null,
       role,
       content: [{ type: "text", text }],
+      attachments: composer.attachments,
     });
 
     setRole("user");
@@ -150,7 +151,7 @@ const Composer: FC = () => {
   };
 
   return (
-    <ComposerPrimitive.Root className="flex w-full flex-col rounded-lg border transition-shadow focus-within:shadow-sm">
+    <ComposerPrimitive.Root className="focus-within:border-aui-ring/20 flex w-full flex-col rounded-lg border shadow-sm transition-colors ease-in">
       <ComposerPrimitive.Input
         autoFocus
         placeholder="Write a message..."

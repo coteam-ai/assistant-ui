@@ -1,4 +1,3 @@
-import { ThreadRuntime } from "..";
 import { AddToolResultOptions } from "../../context";
 import { generateId } from "../../internal";
 import type {
@@ -14,16 +13,11 @@ import {
   MessageRepository,
 } from "../utils/MessageRepository";
 import type { ChatModelAdapter, ChatModelRunResult } from "./ChatModelAdapter";
+import { ThreadRuntimeComposer } from "../utils/ThreadRuntimeComposer";
 import { shouldContinue } from "./shouldContinue";
 import { LocalRuntimeOptions } from "./LocalRuntimeOptions";
-
-const CAPABILITIES = Object.freeze({
-  switchToBranch: true,
-  edit: true,
-  reload: true,
-  cancel: true,
-  copy: true,
-});
+import { ThreadRuntime } from "../core";
+import { SpeechSynthesisAdapter } from "../speech";
 
 export class LocalThreadRuntime implements ThreadRuntime {
   private _subscriptions = new Set<() => void>();
@@ -31,35 +25,70 @@ export class LocalThreadRuntime implements ThreadRuntime {
   private abortController: AbortController | null = null;
   private readonly repository = new MessageRepository();
 
-  public readonly capabilities = CAPABILITIES;
+  public readonly capabilities = {
+    switchToBranch: true,
+    edit: true,
+    reload: true,
+    cancel: true,
+    unstable_copy: true,
+    speak: false,
+    attachments: false,
+  };
 
+  public readonly threadId: string;
   public readonly isDisabled = false;
 
   public get messages() {
     return this.repository.getMessages();
   }
 
-  public readonly composer = {
-    text: "",
-    setText: (value: string) => {
-      this.composer.text = value;
-      this.notifySubscribers();
-    },
-  };
+  public readonly composer = new ThreadRuntimeComposer(
+    this,
+    this.notifySubscribers.bind(this),
+  );
 
   constructor(
     private configProvider: ModelConfigProvider,
     public adapter: ChatModelAdapter,
-    public options: LocalRuntimeOptions,
+    { initialMessages, ...options }: LocalRuntimeOptions,
   ) {
-    if (options.initialMessages) {
+    this.threadId = generateId();
+    this.options = options;
+    if (initialMessages) {
       let parentId: string | null = null;
-      const messages = fromCoreMessages(options.initialMessages);
+      const messages = fromCoreMessages(initialMessages);
       for (const message of messages) {
         this.repository.addOrUpdateMessage(parentId, message);
         parentId = message.id;
       }
     }
+  }
+
+  private _options!: LocalRuntimeOptions;
+
+  public get options() {
+    return this._options;
+  }
+
+  public set options({ initialMessages, ...options }: LocalRuntimeOptions) {
+    this._options = options;
+
+    let hasUpdates = false;
+
+    const canSpeak = options.adapters?.speech !== undefined;
+    if (this.capabilities.speak !== canSpeak) {
+      this.capabilities.speak = canSpeak;
+      hasUpdates = true;
+    }
+
+    this.composer.adapter = options.adapters?.attachments;
+    const canAttach = this.composer.adapter !== undefined;
+    if (this.capabilities.attachments !== canAttach) {
+      this.capabilities.attachments = canAttach;
+      hasUpdates = true;
+    }
+
+    if (hasUpdates) this.notifySubscribers();
   }
 
   public getBranches(messageId: string): string[] {
@@ -72,6 +101,7 @@ export class LocalThreadRuntime implements ThreadRuntime {
   }
 
   public async append(message: AppendMessage): Promise<void> {
+    // TODO add support for assistant appends
     if (message.role !== "user")
       throw new Error(
         "Only appending user messages are supported in LocalRuntime. This is likely an internal bug in assistant-ui.",
@@ -83,6 +113,7 @@ export class LocalThreadRuntime implements ThreadRuntime {
       id: userMessageId,
       role: "user",
       content: message.content,
+      attachments: message.attachments ?? [],
       createdAt: new Date(),
     };
     this.repository.addOrUpdateMessage(message.parentId, userMessage);
@@ -240,7 +271,11 @@ export class LocalThreadRuntime implements ThreadRuntime {
     return () => this._subscriptions.delete(callback);
   }
 
-  addToolResult({ messageId, toolCallId, result }: AddToolResultOptions) {
+  public addToolResult({
+    messageId,
+    toolCallId,
+    result,
+  }: AddToolResultOptions) {
     let { parentId, message } = this.repository.getMessage(messageId);
 
     if (message.role !== "assistant")
@@ -273,11 +308,36 @@ export class LocalThreadRuntime implements ThreadRuntime {
     }
   }
 
-  export() {
+  // TODO lift utterance state to thread runtime
+  private _utterance: SpeechSynthesisAdapter.Utterance | undefined;
+
+  public speak(messageId: string) {
+    const adapter = this.options.adapters?.speech;
+    if (!adapter) throw new Error("Speech adapter not configured");
+
+    const { message } = this.repository.getMessage(messageId);
+
+    if (this._utterance) {
+      this._utterance.cancel();
+      this._utterance = undefined;
+    }
+
+    const utterance = adapter.speak(message);
+    utterance.onEnd(() => {
+      if (this._utterance === utterance) {
+        this._utterance = undefined;
+      }
+    });
+    this._utterance = utterance;
+
+    return this._utterance;
+  }
+
+  public export() {
     return this.repository.export();
   }
 
-  import(data: ExportedMessageRepository) {
+  public import(data: ExportedMessageRepository) {
     this.repository.import(data);
     this.notifySubscribers();
   }

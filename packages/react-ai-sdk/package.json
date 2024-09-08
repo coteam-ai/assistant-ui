@@ -1,6 +1,6 @@
 {
   "name": "@assistant-ui/react-ai-sdk",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "MIT",
   "exports": {
     ".": {
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@assistant-ui/tsconfig": "workspace:*",
-    "eslint-config-next": "14.2.6",
+    "eslint-config-next": "14.2.7",
     "tsup": "8.2.4"
   },
   "publishConfig": {

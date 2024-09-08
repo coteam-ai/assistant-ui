@@ -45,11 +45,25 @@ export const AssistantRuntimeProviderProps = () => {
                             "Whether the runtime supports cancelling runs.",
                         },
                         {
-                          name: "copy",
+                          name: "unstable_copy",
                           type: "boolean",
                           required: true,
                           description:
                             "Whether the runtime supports copying messages.",
+                        },
+                        {
+                          name: "speak",
+                          type: "boolean",
+                          required: true,
+                          description:
+                            "Whether the runtime supports speaking messages.",
+                        },
+                        {
+                          name: "attachments",
+                          type: "boolean",
+                          required: true,
+                          description:
+                            "Whether the runtime supports attachments.",
                         },
                       ],
                     },

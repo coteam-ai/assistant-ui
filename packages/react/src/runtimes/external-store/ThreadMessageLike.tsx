@@ -1,3 +1,4 @@
+import { Attachment } from "../../context/stores/Attachment";
 import {
   MessageStatus,
   TextContentPart,
@@ -15,16 +16,19 @@ import { CoreToolCallContentPart } from "../../types/AssistantTypes";
 
 export type ThreadMessageLike = {
   role: "assistant" | "user" | "system";
-  content: (
-    | TextContentPart
-    | ImageContentPart
-    | ToolCallContentPart<any, any>
-    | CoreToolCallContentPart<any, any>
-    | UIContentPart
-  )[];
+  content:
+    | string
+    | (
+        | TextContentPart
+        | ImageContentPart
+        | ToolCallContentPart<any, any>
+        | CoreToolCallContentPart<any, any>
+        | UIContentPart
+      )[];
   id?: string | undefined;
   createdAt?: Date | undefined;
   status?: MessageStatus | undefined;
+  attachments?: Attachment[] | undefined;
 };
 
 export const fromThreadMessageLike = (
@@ -32,37 +36,54 @@ export const fromThreadMessageLike = (
   fallbackId: string,
   fallbackStatus: MessageStatus,
 ): ThreadMessage => {
-  const { role, content, id, createdAt, status } = like;
+  const { role, id, createdAt, attachments, status } = like;
   const common = {
     id: id ?? fallbackId,
     createdAt: createdAt ?? new Date(),
   };
+
+  const content =
+    typeof like.content === "string"
+      ? [{ type: "text" as const, text: like.content }]
+      : like.content;
+
+  if (role !== "user" && attachments)
+    throw new Error("Attachments are only supported for user messages");
+  // TODO add in 0.6
+  // if (role !== "assistant" && status)
+  //   throw new Error("Status is only supported for assistant messages");
+
   switch (role) {
     case "assistant":
       return {
         ...common,
         role,
-        content: content.map((part): ThreadAssistantContentPart => {
-          const type = part.type;
-          switch (type) {
-            case "text":
-            case "ui":
-              return part;
+        content: content
+          .map((part): ThreadAssistantContentPart | null => {
+            const type = part.type;
+            switch (type) {
+              case "text":
+                if (part.text.trim().length === 0) return null;
+                return part;
 
-            case "tool-call": {
-              if ("argsText" in part) return part;
-              return {
-                ...part,
-                argsText: JSON.stringify(part.args),
-              };
-            }
+              case "ui":
+                return part;
 
-            default: {
-              const unhandledType: "image" = type;
-              throw new Error(`Unknown content part type: ${unhandledType}`);
+              case "tool-call": {
+                if ("argsText" in part) return part;
+                return {
+                  ...part,
+                  argsText: JSON.stringify(part.args),
+                };
+              }
+
+              default: {
+                const unhandledType: "image" = type;
+                throw new Error(`Unknown content part type: ${unhandledType}`);
+              }
             }
-          }
-        }),
+          })
+          .filter((c) => !!c),
         status: status ?? fallbackStatus,
       } satisfies ThreadAssistantMessage;
 
@@ -84,6 +105,7 @@ export const fromThreadMessageLike = (
             }
           }
         }),
+        attachments: attachments ?? [],
       } satisfies ThreadUserMessage;
 
     case "system":

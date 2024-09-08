@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ComponentType,
   FC,
   PropsWithChildren,
   ReactNode,
@@ -9,9 +10,10 @@ import {
 } from "react";
 
 import { AvatarProps } from "./base/avatar";
-import { TextContentPartComponent } from "../types";
+import { TextContentPartComponent, ToolCallContentPartProps } from "../types";
 import { AssistantRuntime } from "../runtimes";
 import { AssistantRuntimeProvider, useAssistantContext } from "../context";
+import { AssistantToolUI } from "../model-config";
 
 export type SuggestionConfig = {
   text?: ReactNode;
@@ -30,15 +32,21 @@ export type UserMessageConfig = {
 export type AssistantMessageConfig = {
   allowReload?: boolean | undefined;
   allowCopy?: boolean | undefined;
+  allowSpeak?: boolean | undefined;
   components?:
     | {
         Text?: TextContentPartComponent | undefined;
+        ToolFallback?: ComponentType<ToolCallContentPartProps> | undefined;
       }
     | undefined;
 };
 
 export type BranchPickerConfig = {
   allowBranchPicker?: boolean | undefined;
+};
+
+export type ComposerConfig = {
+  allowAttachments?: boolean | undefined;
 };
 
 export type StringsConfig = {
@@ -71,6 +79,12 @@ export type StringsConfig = {
     copy?: {
       tooltip?: string | undefined;
     };
+    speak?: {
+      tooltip?: string | undefined;
+      stop?: {
+        tooltip?: string | undefined;
+      };
+    };
   };
   branchPicker?: {
     previous?: {
@@ -91,6 +105,14 @@ export type StringsConfig = {
           tooltip?: string | undefined;
         }
       | undefined;
+    addAttachment?:
+      | {
+          tooltip?: string | undefined;
+        }
+      | undefined;
+    removeAttachment?: {
+      tooltip?: string | undefined;
+    };
     input?: {
       placeholder?: string | undefined;
     };
@@ -125,7 +147,11 @@ export type ThreadConfig = {
 
   branchPicker?: BranchPickerConfig;
 
+  composer?: ComposerConfig;
+
   strings?: StringsConfig;
+
+  tools?: AssistantToolUI[]; // TODO add AssistantTool support
 };
 
 export const useThreadConfig = (): Omit<ThreadConfig, "runtime"> => {

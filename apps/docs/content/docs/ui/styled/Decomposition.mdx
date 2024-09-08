@@ -139,6 +139,8 @@ import { Composer } from "@assistant-ui/react";
 const MyComposer: FC = () => {
   return (
     <Composer.Root>
+      <Composer.Attachments />
+      <Composer.AddAttachment />
       <Composer.Input autoFocus />
       <Composer.Action />
     </Composer.Root>
@@ -252,6 +254,7 @@ const MyAssistantActionBar: FC = () => {
       autohide="not-last"
       autohideFloat="single-branch"
     >
+      <AssistantActionBar.SpeechControl />
       <AssistantActionBar.Reload />
       <AssistantActionBar.Copy />
     </AssistantActionBar.Root>
@@ -282,6 +285,18 @@ Shows a reload button.
 ### AssistantActionBar.Copy
 
 Shows a copy button.
+
+### AssistantActionBar.SpeechControl
+
+Shows a speech control button (either Speak or StopSpeaking).
+
+### AssistantActionBar.Speak
+
+Shows a speak button.
+
+### AssistantActionBar.StopSpeaking
+
+Shows a stop speaking button.
 
 ## BranchPicker
 
