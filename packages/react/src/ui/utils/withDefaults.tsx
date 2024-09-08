@@ -21,14 +21,14 @@ export const withDefaultProps =
 
 export const withDefaults = <TComponent extends ElementType>(
   Component: TComponent,
-  defaultProps: Partial<Omit<ComponentPropsWithoutRef<TComponent>, "asChild">>,
+  defaultProps: Partial<ComponentPropsWithoutRef<TComponent>>,
 ) => {
   type TComponentProps = typeof defaultProps;
   const getProps = withDefaultProps<TComponentProps>(defaultProps);
   const WithDefaults = forwardRef<ElementRef<TComponent>, TComponentProps>(
     (props, ref) => {
       const ComponentAsAny = Component as any;
-      return <ComponentAsAny {...getProps(props)} ref={ref} />;
+      return <ComponentAsAny {...getProps(props as any)} ref={ref} />;
     },
   );
   WithDefaults.displayName =

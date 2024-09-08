@@ -12,6 +12,8 @@ import { getAutoStatus, isAutoStatus } from "./auto-status";
 import { fromThreadMessageLike } from "./ThreadMessageLike";
 import { RuntimeCapabilities } from "../../context/stores/Thread";
 import { getThreadMessageText } from "../../utils/getThreadMessageText";
+import { generateId } from "../../internal";
+import { ThreadRuntimeComposer } from "../utils/ThreadRuntimeComposer";
 
 export const hasUpcomingMessage = (
   isRunning: boolean,
@@ -30,34 +32,39 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
     edit: false,
     reload: false,
     cancel: false,
-    copy: false,
+    unstable_copy: false,
+    speak: false,
+    attachments: false,
   };
 
   public get capabilities() {
     return this._capabilities;
   }
 
-  public messages: ThreadMessage[] = [];
-  public isDisabled = false;
+  public threadId!: string;
+  public messages!: ThreadMessage[];
+  public isDisabled!: boolean;
   public converter = new ThreadMessageConverter();
 
   private _store!: ExternalStoreAdapter<any>;
 
-  public readonly composer = {
-    text: "",
-    setText: (value: string) => {
-      this.composer.text = value;
-      this.notifySubscribers();
-    },
-  };
+  public readonly composer = new ThreadRuntimeComposer(
+    this,
+    this.notifySubscribers.bind(this),
+  );
 
   constructor(store: ExternalStoreAdapter<any>) {
     this.store = store;
   }
 
+  public get store() {
+    return this._store;
+  }
+
   public set store(store: ExternalStoreAdapter<any>) {
     if (this._store === store) return;
 
+    this.threadId = store.threadId ?? this.threadId ?? generateId();
     const isRunning = store.isRunning ?? false;
     this.isDisabled = store.isDisabled ?? false;
 
@@ -68,7 +75,9 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
       edit: this._store.onEdit !== undefined,
       reload: this._store.onReload !== undefined,
       cancel: this._store.onCancel !== undefined,
-      copy: this._store.onCopy !== null,
+      unstable_copy: this._store.unstable_capabilities?.copy !== null,
+      speak: this._store.onSpeak !== undefined,
+      attachments: false,
     };
 
     if (oldStore) {
@@ -205,6 +214,20 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
     }, 0);
   }
 
+  public addToolResult(options: AddToolResultOptions) {
+    if (!this._store.onAddToolResult)
+      throw new Error("Runtime does not support tool results.");
+    this._store.onAddToolResult(options);
+  }
+
+  public speak(messageId: string) {
+    if (!this._store.onSpeak)
+      throw new Error("Runtime does not support speaking.");
+
+    const { message } = this.repository.getMessage(messageId);
+    return this._store.onSpeak(message);
+  }
+
   public subscribe(callback: () => void): Unsubscribe {
     this._subscriptions.add(callback);
     return () => this._subscriptions.delete(callback);
@@ -215,10 +238,4 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
       messages.flatMap(getExternalStoreMessage).filter((m) => m != null),
     );
   };
-
-  addToolResult(options: AddToolResultOptions) {
-    if (!this._store.onAddToolResult)
-      throw new Error("Runtime does not support tool results.");
-    this._store.onAddToolResult(options);
-  }
 }

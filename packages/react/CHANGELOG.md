@@ -1,5 +1,51 @@
 # @assistant-ui/react
 
+## 0.5.46
+
+### Patch Changes
+
+- 0a4b8d7: feat: adjust the override order of tool UIs
+- 34ad491: feat: ThreadConfig.ToolFallback
+- 34ad491: feat: ThreadConfig.tools
+- 0a4b8d7: fix: tool UI fallback should not override makeAssistantToolUI definitions
+
+## 0.5.45
+
+### Patch Changes
+
+- fb8e58f: feat: add thread runtime threadId
+
+## 0.5.44
+
+### Patch Changes
+
+- b2801ce: feat(styling): cursor-not-allowed when composer input is disabled
+- 0aa4e6b: fix: use-smooth-state should notdesync
+
+## 0.5.43
+
+### Patch Changes
+
+- 3962831: feat: useExternalMessageConverter API
+- 85defe1: feat: allow string content in ThreadMessageLike
+- 6f7ccf7: feat: add toolName to addToolResult callback
+- 6f7ccf7: feat: thread converter should ignore empty text parts
+
+## 0.5.42
+
+### Patch Changes
+
+- c8b98b6: feat: animate composer border color on focus
+- 800eb9e: fix: error on switchToThread / switchToNewThread
+- 8768c67: feat: support shadcn scroll area
+
+## 0.5.41
+
+### Patch Changes
+
+- f526279: feat: SpeechSyntehsis
+- e8aa697: refactor: remove unsupported external runtime onCopy callback
+
 ## 0.5.40
 
 ### Patch Changes

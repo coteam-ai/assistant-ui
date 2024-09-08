@@ -4,6 +4,7 @@ import { ThreadRuntimeStore } from "./ThreadRuntime";
 
 export type ThreadState = Readonly<{
   capabilities: Readonly<RuntimeCapabilities>;
+  threadId: string;
   isRunning: boolean;
   isDisabled: boolean;
 }>;
@@ -13,7 +14,9 @@ export type RuntimeCapabilities = {
   edit: boolean;
   reload: boolean;
   cancel: boolean;
-  copy: boolean;
+  unstable_copy: boolean;
+  speak: boolean;
+  attachments: boolean;
 };
 
 export const getThreadStateFromRuntime = (
@@ -21,6 +24,7 @@ export const getThreadStateFromRuntime = (
 ): ThreadState => {
   const lastMessage = runtime.messages.at(-1);
   return Object.freeze({
+    threadId: runtime.threadId,
     capabilities: runtime.capabilities,
     isDisabled: runtime.isDisabled,
     isRunning:

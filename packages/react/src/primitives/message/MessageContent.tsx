@@ -30,14 +30,28 @@ export type MessagePrimitiveContentProps = {
         Text?: TextContentPartComponent | undefined;
         Image?: ImageContentPartComponent | undefined;
         UI?: UIContentPartComponent | undefined;
-        tools?: {
-          by_name?:
-            | Record<string, ToolCallContentPartComponent | undefined>
-            | undefined;
-          Fallback?: ComponentType<ToolCallContentPartProps> | undefined;
-        };
+        tools?:
+          | {
+              by_name?:
+                | Record<string, ToolCallContentPartComponent | undefined>
+                | undefined;
+              Fallback?: ComponentType<ToolCallContentPartProps> | undefined;
+            }
+          | undefined;
       }
     | undefined;
+};
+
+const ToolUIDisplay = ({
+  UI,
+  ...props
+}: {
+  UI: ToolCallContentPartComponent | undefined;
+} & ToolCallContentPartProps) => {
+  const { useToolUIs } = useAssistantContext();
+  const Render = useToolUIs((s) => s.getToolUI(props.part.toolName)) ?? UI;
+  if (!Render) return null;
+  return <Render {...props} />;
 };
 
 const defaultComponents = {
@@ -51,14 +65,6 @@ const defaultComponents = {
   ),
   Image: () => <ContentPartPrimitiveImage />,
   UI: () => <ContentPartPrimitiveDisplay />,
-  tools: {
-    Fallback: (props) => {
-      const { useToolUIs } = useAssistantContext();
-      const Render = useToolUIs((s) => s.getToolUI(props.part.toolName));
-      if (!Render) return null;
-      return <Render {...props} />;
-    },
-  },
 } satisfies MessagePrimitiveContentProps["components"];
 
 type MessageContentPartComponentProps = {
@@ -71,7 +77,7 @@ const MessageContentPartComponent: FC<MessageContentPartComponentProps> = ({
     Text = defaultComponents.Text,
     Image = defaultComponents.Image,
     UI = defaultComponents.UI,
-    tools: { by_name = {}, Fallback = defaultComponents.tools.Fallback } = {},
+    tools: { by_name = {}, Fallback = undefined } = {},
   } = {},
 }) => {
   const { useThreadActions } = useThreadContext();
@@ -106,10 +112,18 @@ const MessageContentPartComponent: FC<MessageContentPartComponentProps> = ({
       const addResult = (result: any) =>
         addToolResult({
           messageId: useMessage.getState().message.id,
+          toolName: part.toolName,
           toolCallId: part.toolCallId,
           result,
         });
-      return <Tool part={part} status={status} addResult={addResult} />;
+      return (
+        <ToolUIDisplay
+          UI={Tool}
+          part={part}
+          status={status}
+          addResult={addResult}
+        />
+      );
     }
     default:
       const unhandledType: never = type;
@@ -150,16 +164,9 @@ export const MessagePrimitiveContent: FC<MessagePrimitiveContentProps> = ({
 
   const contentLength = useMessage((s) => s.message.content.length) || 1;
 
-  return new Array(contentLength).fill(null).map((_, idx) => {
-    const partIndex = idx; // use the index as key, as message is generally append only
-    return (
-      <MessageContentPart
-        key={partIndex}
-        partIndex={partIndex}
-        components={components}
-      />
-    );
-  });
+  return Array.from({ length: contentLength }, (_, index) => (
+    <MessageContentPart key={index} partIndex={index} components={components} />
+  ));
 };
 
 MessagePrimitiveContent.displayName = "MessagePrimitive.Content";

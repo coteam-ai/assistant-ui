@@ -2,9 +2,11 @@ import { create } from "zustand";
 import type { AppendMessage } from "../../types/AssistantTypes";
 import { ReadonlyStore } from "../ReadonlyStore";
 import { ThreadRuntimeStore } from "./ThreadRuntime";
+import { SpeechSynthesisAdapter } from "../../runtimes/speech/SpeechAdapterTypes";
 
 export type AddToolResultOptions = {
   messageId: string;
+  toolName: string;
   toolCallId: string;
   result: any;
 };
@@ -18,6 +20,8 @@ export type ThreadActionsState = Readonly<{
   cancelRun: () => void;
 
   addToolResult: (options: AddToolResultOptions) => void;
+
+  speak: (messageId: string) => SpeechSynthesisAdapter.Utterance;
 }>;
 
 export const makeThreadActionStore = (
@@ -29,11 +33,15 @@ export const makeThreadActionStore = (
         runtimeStore.getState().getBranches(messageId),
       switchToBranch: (branchId) =>
         runtimeStore.getState().switchToBranch(branchId),
+
       startRun: (parentId) => runtimeStore.getState().startRun(parentId),
       append: (message) => runtimeStore.getState().append(message),
       cancelRun: () => runtimeStore.getState().cancelRun(),
+
       addToolResult: (options) =>
         runtimeStore.getState().addToolResult(options),
+
+      speak: (messageId) => runtimeStore.getState().speak(messageId),
     }),
   );
 };

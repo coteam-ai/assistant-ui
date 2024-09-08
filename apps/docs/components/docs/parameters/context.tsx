@@ -270,6 +270,30 @@ export const BaseComposerState: ParametersTableProps = {
       required: true,
       description: "A function to set the text of the composer.",
     },
+    {
+      name: "attachments",
+      type: "readonly Attachment[]",
+      required: true,
+      description: "The current attachments of the composer.",
+    },
+    {
+      name: "addAttachment",
+      type: "(attachment: Attachment) => void",
+      required: true,
+      description: "A function to add an attachment to the composer.",
+    },
+    {
+      name: "removeAttachment",
+      type: "(attachmentId: string) => void",
+      required: true,
+      description: "A function to remove an attachment from the composer.",
+    },
+    {
+      name: "reset",
+      type: "() => void",
+      required: true,
+      description: "A function to reset the composer.",
+    },
   ],
 };
 
@@ -476,6 +500,48 @@ export const MessageUtilsState: ParametersTableProps = {
       type: "(value: boolean) => void",
       required: true,
       description: "A function to set the is hovering.",
+    },
+    {
+      name: "isSpeaking",
+      type: "boolean",
+      required: true,
+      description: "Whether the message is currently being spoken.",
+    },
+    {
+      name: "stopSpeaking",
+      type: "() => void",
+      required: true,
+      description: "A function to stop the message from being spoken.",
+    },
+    {
+      name: "addUtterance",
+      type: "(utterance: SpeechSynthesisAdapter.Utterance) => void",
+      required: true,
+      description: "A function to add a speech utterance.",
+    },
+  ],
+};
+
+export const AttachmentContextValue: ParametersTableProps = {
+  type: "AttachmentContextValue",
+  parameters: [
+    {
+      name: "useAttachment",
+      type: "ReadonlyStore<AttachmentState>",
+      required: true,
+      description: "Provides functions to perform actions on the attachment.",
+    },
+  ],
+};
+
+export const AttachmentState: ParametersTableProps = {
+  type: "AttachmentState",
+  parameters: [
+    {
+      name: "attachment",
+      type: "Attachment",
+      required: true,
+      description: "The current attachment.",
     },
   ],
 };

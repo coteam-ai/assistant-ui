@@ -1,5 +1,6 @@
 import { AddToolResultOptions } from "../../context";
 import { AppendMessage, ThreadMessage } from "../../types";
+import { SpeechSynthesisAdapter } from "../speech/SpeechAdapterTypes";
 import { ThreadMessageLike } from "./ThreadMessageLike";
 
 export type ExternalStoreMessageConverter<T> = (
@@ -21,7 +22,6 @@ type ExternalStoreAdapterBase<T> = {
   onEdit?: ((message: AppendMessage) => Promise<void>) | undefined;
   onReload?: ((parentId: string | null) => Promise<void>) | undefined;
   onCancel?: (() => Promise<void>) | undefined;
-  onCopy?: (() => Promise<void>) | null | undefined;
   onNewThread?: (() => Promise<void> | void) | undefined;
   onAddToolResult?:
     | ((options: AddToolResultOptions) => Promise<void> | void)
@@ -29,7 +29,15 @@ type ExternalStoreAdapterBase<T> = {
   onSwitchThread?:
     | ((threadId: string | null) => Promise<void> | void)
     | undefined;
+  onSpeak?:
+    | ((message: ThreadMessage) => SpeechSynthesisAdapter.Utterance)
+    | undefined;
   convertMessage?: ExternalStoreMessageConverter<T> | undefined;
+  unstable_capabilities?:
+    | {
+        copy?: boolean | undefined;
+      }
+    | undefined;
 };
 
 export type ExternalStoreAdapter<T = ThreadMessage> =

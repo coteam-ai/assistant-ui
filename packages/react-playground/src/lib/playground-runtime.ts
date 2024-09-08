@@ -28,7 +28,12 @@ import { LanguageModelV1FunctionTool } from "@ai-sdk/provider";
 import { useState } from "react";
 import { create } from "zustand";
 
-const { BaseAssistantRuntime, ProxyConfigProvider, generateId } = INTERNAL;
+const {
+  BaseAssistantRuntime,
+  ProxyConfigProvider,
+  generateId,
+  ThreadRuntimeComposer,
+} = INTERNAL;
 
 const makeModelConfigStore = () =>
   create<ModelConfig>(() => ({
@@ -84,7 +89,9 @@ const CAPABILITIES = Object.freeze({
   edit: false,
   reload: false,
   cancel: true,
-  copy: false,
+  unstable_copy: false,
+  speak: false,
+  attachments: false,
 });
 
 const EMPTY_BRANCHES: readonly string[] = Object.freeze([]);
@@ -96,18 +103,16 @@ export class PlaygroundThreadRuntime implements ReactThreadRuntime {
 
   public tools: Record<string, Tool<any, any>> = {};
 
+  public readonly threadId = generateId();
   public readonly isDisabled = false;
   public readonly capabilities = CAPABILITIES;
 
   private configProvider = new ProxyConfigProvider();
 
-  public readonly composer = {
-    text: "",
-    setText: (value: string) => {
-      this.composer.text = value;
-      this.notifySubscribers();
-    },
-  };
+  public readonly composer = new ThreadRuntimeComposer(
+    this,
+    this.notifySubscribers.bind(this),
+  );
 
   constructor(
     configProvider: ModelConfigProvider,
@@ -251,6 +256,10 @@ export class PlaygroundThreadRuntime implements ReactThreadRuntime {
 
     this.abortController.abort();
     this.abortController = null;
+  }
+
+  public speak(): never {
+    throw new Error("PlaygroundRuntime does not support speaking.");
   }
 
   public deleteMessage(messageId: string) {
