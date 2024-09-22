@@ -1,5 +1,82 @@
 # @assistant-ui/react-ai-sdk
 
+## 0.6.8
+
+### Patch Changes
+
+- 155d6e7: chore: update dependencies
+- Updated dependencies [926dce5]
+- Updated dependencies [155d6e7]
+- Updated dependencies [f80226f]
+  - @assistant-ui/react@0.5.60
+
+## 0.6.7
+
+### Patch Changes
+
+- e4863bb: feat(runtimes/external): add onSwitchToNewThread callback
+- Updated dependencies [e4863bb]
+- Updated dependencies [e4863bb]
+  - @assistant-ui/react@0.5.56
+
+## 0.6.6
+
+### Patch Changes
+
+- c348553: chore: update dependencies
+- Updated dependencies [0f99aa6]
+- Updated dependencies [c348553]
+  - @assistant-ui/react@0.5.54
+
+## 0.6.5
+
+### Patch Changes
+
+- 132b796: feat: improve AI SDK attachments support
+- 132b796: refactor: AI SDK message converter
+- Updated dependencies [f0f7497]
+- Updated dependencies [8555685]
+- Updated dependencies [892b019]
+  - @assistant-ui/react@0.5.53
+
+## 0.6.4
+
+### Patch Changes
+
+- 04f6fc8: chore: update deps
+- Updated dependencies [04f6fc8]
+  - @assistant-ui/react@0.5.50
+
+## 0.6.3
+
+### Patch Changes
+
+- bdd3084: feat: allow runtimes to signal support for attachments
+- 7dcab47: feat: add AttachmentAdapter for AI SDK
+- 7dcab47: fix: message copy handling for runtimes
+- a22e6bb: feat: AttachmentAdapter.accept allow attachment adapters to specify supported file types
+- 9e00772: feat: add composer attachments state
+- 7809584: feat: allow image content types
+- 3ab5a6b: refactor: rename `getVercelAIMessage` to `getVercelAIMessages`
+- 7809584: feat: AI SDK attachments support
+- Updated dependencies [a81b18f]
+- Updated dependencies [44d08bd]
+- Updated dependencies [b48fbcc]
+- Updated dependencies [cc5e7d4]
+- Updated dependencies [bdd3084]
+- Updated dependencies [7dcab47]
+- Updated dependencies [a22e6bb]
+- Updated dependencies [9e00772]
+- Updated dependencies [d2580d3]
+- Updated dependencies [c845fcf]
+- Updated dependencies [3ba193e]
+- Updated dependencies [d2580d3]
+- Updated dependencies [3b0f20b]
+- Updated dependencies [3ba193e]
+- Updated dependencies [d2580d3]
+- Updated dependencies [44d08bd]
+  - @assistant-ui/react@0.5.47
+
 ## 0.6.2
 
 ### Patch Changes

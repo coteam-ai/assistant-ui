@@ -1,5 +1,61 @@
 # @assistant-ui/react-playground
 
+## 0.0.27
+
+### Patch Changes
+
+- 926dce5: feat: Feedback Primtives, UI and Adapter
+- 155d6e7: chore: update dependencies
+- f80226f: feat: ThreadActions.getModelConfig
+- Updated dependencies [926dce5]
+- Updated dependencies [155d6e7]
+- Updated dependencies [f80226f]
+  - @assistant-ui/react@0.5.60
+
+## 0.0.26
+
+### Patch Changes
+
+- 0f99aa6: feat: New Context API
+- c348553: chore: update dependencies
+- Updated dependencies [0f99aa6]
+- Updated dependencies [c348553]
+  - @assistant-ui/react@0.5.54
+
+## 0.0.25
+
+### Patch Changes
+
+- 04f6fc8: chore: update deps
+- Updated dependencies [04f6fc8]
+  - @assistant-ui/react@0.5.50
+
+## 0.0.24
+
+### Patch Changes
+
+- bdd3084: feat: allow runtimes to signal support for attachments
+- 7dcab47: fix: message copy handling for runtimes
+- 9e00772: feat: add composer attachments state
+- 44d08bd: feat: Edge/Local runtime AttachmentAdapter support
+- Updated dependencies [a81b18f]
+- Updated dependencies [44d08bd]
+- Updated dependencies [b48fbcc]
+- Updated dependencies [cc5e7d4]
+- Updated dependencies [bdd3084]
+- Updated dependencies [7dcab47]
+- Updated dependencies [a22e6bb]
+- Updated dependencies [9e00772]
+- Updated dependencies [d2580d3]
+- Updated dependencies [c845fcf]
+- Updated dependencies [3ba193e]
+- Updated dependencies [d2580d3]
+- Updated dependencies [3b0f20b]
+- Updated dependencies [3ba193e]
+- Updated dependencies [d2580d3]
+- Updated dependencies [44d08bd]
+  - @assistant-ui/react@0.5.47
+
 ## 0.0.23
 
 ### Patch Changes

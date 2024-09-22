@@ -3,7 +3,7 @@ import { useEffect, useInsertionEffect, useState } from "react";
 import type { ReactThreadRuntime } from "../../runtimes/core/ReactThreadRuntime";
 import type { ThreadContextValue } from "../react/ThreadContext";
 import { ThreadContext } from "../react/ThreadContext";
-import { makeComposerStore } from "../stores/Composer";
+import { makeThreadComposerStore } from "../stores/ThreadComposer";
 import { getThreadStateFromRuntime, makeThreadStore } from "../stores/Thread";
 import { makeThreadViewportStore } from "../stores/ThreadViewport";
 import { makeThreadActionStore } from "../stores/ThreadActions";
@@ -12,6 +12,7 @@ import { ThreadRuntimeWithSubscribe } from "../../runtimes/core/AssistantRuntime
 import { makeThreadRuntimeStore } from "../stores/ThreadRuntime";
 import { subscribeToMainThread } from "../../runtimes";
 import { writableStore } from "../ReadonlyStore";
+import { subscribeToMainThreadComposer } from "../../runtimes/core/subscribeToMainThread";
 
 type ThreadProviderProps = {
   provider: ThreadRuntimeWithSubscribe;
@@ -27,7 +28,7 @@ export const ThreadProvider: FC<PropsWithChildren<ThreadProviderProps>> = ({
     const useThreadMessages = makeThreadMessagesStore(useThreadRuntime);
     const useThreadActions = makeThreadActionStore(useThreadRuntime);
     const useViewport = makeThreadViewportStore();
-    const useComposer = makeComposerStore(useThreadRuntime);
+    const useComposer = makeThreadComposerStore(useThreadRuntime);
 
     return {
       useThread,
@@ -64,14 +65,8 @@ export const ThreadProvider: FC<PropsWithChildren<ThreadProviderProps>> = ({
       }
 
       const composerState = context.useComposer.getState();
-      if (
-        thread.composer.text !== composerState.text ||
-        thread.composer.attachments !== composerState.attachments ||
-        state.capabilities.cancel !== composerState.canCancel
-      ) {
+      if (state.capabilities.cancel !== composerState.canCancel) {
         writableStore(context.useComposer).setState({
-          text: thread.composer.text,
-          attachments: thread.composer.attachments,
           canCancel: state.capabilities.cancel,
         });
       }
@@ -79,6 +74,30 @@ export const ThreadProvider: FC<PropsWithChildren<ThreadProviderProps>> = ({
 
     onThreadUpdate();
     return subscribeToMainThread(provider, onThreadUpdate);
+  }, [provider, context]);
+
+  useEffect(() => {
+    const onComposerUpdate = () => {
+      const composer = provider.thread.composer;
+
+      const composerState = context.useComposer.getState();
+      if (
+        composer.isEmpty !== composerState.isEmpty ||
+        composer.text !== composerState.text ||
+        composer.attachmentAccept !== composerState.attachmentAccept ||
+        composer.attachments !== composerState.attachments
+      ) {
+        writableStore(context.useComposer).setState({
+          isEmpty: composer.isEmpty,
+          text: composer.text,
+          attachmentAccept: composer.attachmentAccept,
+          attachments: composer.attachments,
+        });
+      }
+    };
+
+    onComposerUpdate();
+    return subscribeToMainThreadComposer(provider, onComposerUpdate);
   }, [provider, context]);
 
   useInsertionEffect(

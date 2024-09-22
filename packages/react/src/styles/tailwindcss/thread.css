@@ -42,7 +42,9 @@
   @apply line-clamp-2 text-ellipsis text-sm font-semibold;
 }
 
-/* composer */
+/* TODO rename classes to .aui-thread-composer-root ? */
+/* rename composer to thread composer everywhere */
+/* thread composer */
 
 .aui-composer-root {
   @apply focus-within:border-aui-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in;
@@ -58,11 +60,11 @@
   @apply my-2.5 size-8 p-2 transition-opacity ease-in;
 }
 
-.aui-composer-attachments-container {
+.aui-composer-attachments {
   @apply flex w-full flex-row gap-3 px-10;
 }
 
-.aui-composer-attachment-container {
+.aui-composer-attachment-root {
   @apply bg-aui-muted relative mt-4 flex size-20 items-center justify-center rounded-lg p-2;
 }
 
@@ -78,15 +80,20 @@
 }
 
 :where(.aui-user-message-root) > .aui-user-action-bar-root {
-  @apply col-start-1 mr-3 mt-2.5;
+  @apply col-start-1 row-start-2 mr-3 mt-2.5;
+}
+
+:where(.aui-user-message-root) > .aui-user-message-attachments {
+  @apply col-span-full col-start-1 row-start-1;
+  @apply justify-end;
 }
 
 :where(.aui-user-message-root) > .aui-user-message-content {
-  @apply col-start-2 row-start-1;
+  @apply col-start-2 row-start-2;
 }
 
 :where(.aui-user-message-root) > .aui-branch-picker-root {
-  @apply col-span-full col-start-1 row-start-2;
+  @apply col-span-full col-start-1 row-start-3;
   @apply -mr-1 justify-end;
 }
 
@@ -94,11 +101,21 @@
   @apply bg-aui-muted text-aui-foreground max-w-xl break-words rounded-3xl px-5 py-2.5;
 }
 
-/* thread action bar */
+.aui-user-message-attachments {
+  @apply flex w-full flex-row gap-3;
+}
+
+.aui-user-message-attachment-root {
+  @apply bg-aui-muted relative flex size-20 items-center justify-center rounded-lg p-2;
+}
+
+/* user action bar */
 
 .aui-user-action-bar-root {
   @apply flex flex-col items-end;
 }
+
+/* edit composer */
 
 .aui-edit-composer-root {
   @apply bg-aui-muted my-4 flex w-full max-w-2xl flex-col gap-2 rounded-xl;
@@ -151,7 +168,15 @@
   @apply bg-aui-background absolute rounded-md border p-1 shadow-sm;
 }
 
-/* branch picker */
+:where(.aui-assistant-action-bar-feedback-positive)[data-submitted] {
+  @apply text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400;
+}
+
+:where(.aui-assistant-action-bar-feedback-negative)[data-submitted] {
+  @apply text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400;
+}
+
+/* branch picker *
 
 .aui-branch-picker-root {
   @apply text-aui-muted-foreground inline-flex items-center text-xs;

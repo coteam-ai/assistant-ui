@@ -66,15 +66,19 @@ class PlaygroundRuntime
     this._proxyConfigProvider = cp;
   }
 
-  public switchToThread(threadId: string | null) {
-    if (threadId)
-      throw new Error("PlaygroundRuntime does not support switching threads");
-
+  public switchToNewThread() {
     this.thread = new PlaygroundThreadRuntime(
       this._proxyConfigProvider,
       [],
       this.thread.adapter,
     );
+  }
+
+  public switchToThread(threadId: string | null) {
+    if (threadId !== null)
+      throw new Error("PlaygroundRuntime does not support switching threads");
+
+    this.switchToNewThread();
   }
 
   public override registerModelConfigProvider(
@@ -89,9 +93,10 @@ const CAPABILITIES = Object.freeze({
   edit: false,
   reload: false,
   cancel: true,
-  unstable_copy: false,
+  unstable_copy: true,
   speak: false,
   attachments: false,
+  feedback: false,
 });
 
 const EMPTY_BRANCHES: readonly string[] = Object.freeze([]);
@@ -109,10 +114,7 @@ export class PlaygroundThreadRuntime implements ReactThreadRuntime {
 
   private configProvider = new ProxyConfigProvider();
 
-  public readonly composer = new ThreadRuntimeComposer(
-    this,
-    this.notifySubscribers.bind(this),
-  );
+  public readonly composer = new ThreadRuntimeComposer(this);
 
   constructor(
     configProvider: ModelConfigProvider,
@@ -123,6 +125,10 @@ export class PlaygroundThreadRuntime implements ReactThreadRuntime {
     this.configProvider.registerModelConfigProvider({
       getModelConfig: () => this.useModelConfig.getState(),
     });
+  }
+
+  public getModelConfig() {
+    return this.configProvider.getModelConfig();
   }
 
   public setRequestData({
@@ -260,6 +266,10 @@ export class PlaygroundThreadRuntime implements ReactThreadRuntime {
 
   public speak(): never {
     throw new Error("PlaygroundRuntime does not support speaking.");
+  }
+
+  public submitFeedback(): never {
+    throw new Error("PlaygroundRuntime does not support feedback.");
   }
 
   public deleteMessage(messageId: string) {

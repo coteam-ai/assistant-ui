@@ -4,10 +4,12 @@ import { ExternalStoreAdapter } from "./ExternalStoreAdapter";
 import { ExternalStoreThreadRuntime } from "./ExternalStoreThreadRuntime";
 
 export class ExternalStoreRuntime extends BaseAssistantRuntime<ExternalStoreThreadRuntime> {
-  private readonly _proxyConfigProvider = new ProxyConfigProvider();
+  private readonly _proxyConfigProvider;
 
   constructor(store: ExternalStoreAdapter<any>) {
-    super(new ExternalStoreThreadRuntime(store));
+    const provider = new ProxyConfigProvider();
+    super(new ExternalStoreThreadRuntime(provider, store));
+    this._proxyConfigProvider = provider;
   }
 
   public get store() {
@@ -26,25 +28,29 @@ export class ExternalStoreRuntime extends BaseAssistantRuntime<ExternalStoreThre
     return this._proxyConfigProvider.registerModelConfigProvider(provider);
   }
 
+  public async switchToNewThread() {
+    if (!this.store.onSwitchToNewThread)
+      throw new Error("Runtime does not support switching to new threads.");
+
+    this.thread = new ExternalStoreThreadRuntime(this._proxyConfigProvider, {
+      ...this.store,
+      messages: [],
+    });
+    await this.store.onSwitchToNewThread();
+  }
+
   public async switchToThread(threadId: string | null) {
-    if (threadId) {
-      if (!this.store.onSwitchThread)
+    if (threadId !== null) {
+      if (!this.store.onSwitchToThread)
         throw new Error("Runtime does not support switching threads.");
 
-      this.thread = new ExternalStoreThreadRuntime({
-        messages: [],
-        onNew: this.store.onNew,
+      this.thread = new ExternalStoreThreadRuntime(this._proxyConfigProvider, {
+        ...this.store,
+        messages: [], // ignore messages until rerender
       });
-      this.store.onSwitchThread(threadId);
+      this.store.onSwitchToThread(threadId);
     } else {
-      if (!this.store.onNewThread)
-        throw new Error("Runtime does not support switching to new threads.");
-
-      this.thread = new ExternalStoreThreadRuntime({
-        messages: [],
-        onNew: this.store.onNew,
-      });
-      await this.store.onNewThread();
+      this.switchToNewThread();
     }
   }
 }

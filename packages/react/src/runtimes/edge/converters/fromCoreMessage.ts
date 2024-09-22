@@ -1,4 +1,4 @@
-import { Attachment } from "../../../context/stores/Attachment";
+import { MessageAttachment } from "../../../context/stores/Attachment";
 import { generateId } from "../../../internal";
 import {
   ThreadMessage,
@@ -14,11 +14,11 @@ export const fromCoreMessages = (
 };
 
 export const fromCoreMessage = (
-  // TODO clean up this type
-  message: CoreMessage & { attachments?: readonly Attachment[] | undefined },
+  message: CoreMessage,
   {
     id = generateId(),
     status = { type: "complete", reason: "unknown" } as MessageStatus,
+    attachments = [] as readonly MessageAttachment[],
   } = {},
 ): ThreadMessage => {
   const commonProps = {
@@ -49,7 +49,7 @@ export const fromCoreMessage = (
         ...commonProps,
         role,
         content: message.content,
-        attachments: message.attachments ?? [],
+        attachments,
       } satisfies ThreadMessage;
 
     case "system":

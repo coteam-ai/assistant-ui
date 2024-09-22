@@ -1,25 +1,26 @@
 "use client";
 
 import { type FC, type PropsWithChildren, useEffect, useState } from "react";
-import { StoreApi, create } from "zustand";
-import type { ComposerState } from "../stores";
-import { useThreadContext } from "../react";
-import { AttachmentState } from "../stores/Attachment";
+import { create } from "zustand";
+import type { ThreadComposerState } from "../stores";
+import { ComposerAttachmentState } from "../stores/Attachment";
 import {
   AttachmentContext,
   AttachmentContextValue,
 } from "../react/AttachmentContext";
+import { writableStore } from "../ReadonlyStore";
+import { useThreadComposerStore } from "../react/ThreadContext";
 
 type ComposerAttachmentProviderProps = PropsWithChildren<{
   attachmentIndex: number;
 }>;
 
 const getAttachment = (
-  { attachments }: ComposerState,
+  { attachments }: ThreadComposerState,
   useAttachment: AttachmentContextValue["useAttachment"] | undefined,
   partIndex: number,
 ) => {
-  let attachment = attachments[partIndex];
+  const attachment = attachments[partIndex];
   if (!attachment) return null;
 
   // if the attachment is the same, don't update
@@ -30,32 +31,32 @@ const getAttachment = (
 };
 
 const useComposerAttachmentContext = (partIndex: number) => {
-  const { useComposer } = useThreadContext();
-  const [context] = useState<AttachmentContextValue>(() => {
-    const useAttachment = create<AttachmentState>(
-      () => getAttachment(useComposer.getState(), undefined, partIndex)!,
-    );
+  const threadComposerStore = useThreadComposerStore();
+  const [context] = useState<AttachmentContextValue & { type: "composer" }>(
+    () => {
+      const useAttachment = create<ComposerAttachmentState>(
+        () =>
+          getAttachment(threadComposerStore.getState(), undefined, partIndex)!,
+      );
 
-    return { useAttachment };
-  });
+      return { type: "composer", useAttachment };
+    },
+  );
 
   useEffect(() => {
-    const syncAttachment = (composer: ComposerState) => {
+    const syncAttachment = (composer: ThreadComposerState) => {
       const newState = getAttachment(
         composer,
         context.useAttachment,
         partIndex,
       );
       if (!newState) return;
-      (context.useAttachment as unknown as StoreApi<AttachmentState>).setState(
-        newState,
-        true,
-      );
+      writableStore(context.useAttachment).setState(newState, true);
     };
 
-    syncAttachment(useComposer.getState());
-    return useComposer.subscribe(syncAttachment);
-  }, [context, useComposer, partIndex]);
+    syncAttachment(threadComposerStore.getState());
+    return threadComposerStore.subscribe(syncAttachment);
+  }, [context, threadComposerStore, partIndex]);
 
   return context;
 };

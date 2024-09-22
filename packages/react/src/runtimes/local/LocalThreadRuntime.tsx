@@ -3,11 +3,10 @@ import { generateId } from "../../internal";
 import type {
   ModelConfigProvider,
   AppendMessage,
-  ThreadUserMessage,
   ThreadAssistantMessage,
   Unsubscribe,
 } from "../../types";
-import { fromCoreMessages } from "../edge";
+import { fromCoreMessage, fromCoreMessages } from "../edge";
 import {
   ExportedMessageRepository,
   MessageRepository,
@@ -18,6 +17,7 @@ import { shouldContinue } from "./shouldContinue";
 import { LocalRuntimeOptions } from "./LocalRuntimeOptions";
 import { ThreadRuntime } from "../core";
 import { SpeechSynthesisAdapter } from "../speech";
+import { SubmitFeedbackOptions } from "../../context/stores/ThreadActions";
 
 export class LocalThreadRuntime implements ThreadRuntime {
   private _subscriptions = new Set<() => void>();
@@ -33,6 +33,7 @@ export class LocalThreadRuntime implements ThreadRuntime {
     unstable_copy: true,
     speak: false,
     attachments: false,
+    feedback: false,
   };
 
   public readonly threadId: string;
@@ -42,10 +43,7 @@ export class LocalThreadRuntime implements ThreadRuntime {
     return this.repository.getMessages();
   }
 
-  public readonly composer = new ThreadRuntimeComposer(
-    this,
-    this.notifySubscribers.bind(this),
-  );
+  public readonly composer = new ThreadRuntimeComposer(this);
 
   constructor(
     private configProvider: ModelConfigProvider,
@@ -62,6 +60,10 @@ export class LocalThreadRuntime implements ThreadRuntime {
         parentId = message.id;
       }
     }
+  }
+
+  public getModelConfig() {
+    return this.configProvider.getModelConfig();
   }
 
   private _options!: LocalRuntimeOptions;
@@ -81,10 +83,17 @@ export class LocalThreadRuntime implements ThreadRuntime {
       hasUpdates = true;
     }
 
-    this.composer.adapter = options.adapters?.attachments;
-    const canAttach = this.composer.adapter !== undefined;
+    this.composer.setAttachmentAdapter(options.adapters?.attachments);
+
+    const canAttach = options.adapters?.attachments !== undefined;
     if (this.capabilities.attachments !== canAttach) {
       this.capabilities.attachments = canAttach;
+      hasUpdates = true;
+    }
+
+    const canFeedback = options.adapters?.feedback !== undefined;
+    if (this.capabilities.feedback !== canFeedback) {
+      this.capabilities.feedback = canFeedback;
       hasUpdates = true;
     }
 
@@ -101,24 +110,17 @@ export class LocalThreadRuntime implements ThreadRuntime {
   }
 
   public async append(message: AppendMessage): Promise<void> {
-    // TODO add support for assistant appends
-    if (message.role !== "user")
-      throw new Error(
-        "Only appending user messages are supported in LocalRuntime. This is likely an internal bug in assistant-ui.",
-      );
+    const newMessage = fromCoreMessage(message, {
+      attachments: message.attachments,
+    });
+    this.repository.addOrUpdateMessage(message.parentId, newMessage);
 
-    // add user message
-    const userMessageId = generateId();
-    const userMessage: ThreadUserMessage = {
-      id: userMessageId,
-      role: "user",
-      content: message.content,
-      attachments: message.attachments ?? [],
-      createdAt: new Date(),
-    };
-    this.repository.addOrUpdateMessage(message.parentId, userMessage);
-
-    await this.startRun(userMessageId);
+    if (message.role === "user") {
+      await this.startRun(newMessage.id);
+    } else {
+      this.repository.resetHead(newMessage.id);
+      this.notifySubscribers();
+    }
   }
 
   public async startRun(parentId: string | null): Promise<void> {
@@ -276,7 +278,9 @@ export class LocalThreadRuntime implements ThreadRuntime {
     toolCallId,
     result,
   }: AddToolResultOptions) {
-    let { parentId, message } = this.repository.getMessage(messageId);
+    const messageData = this.repository.getMessage(messageId);
+    const { parentId } = messageData;
+    let { message } = messageData;
 
     if (message.role !== "assistant")
       throw new Error("Tried to add tool result to non-assistant message");
@@ -331,6 +335,14 @@ export class LocalThreadRuntime implements ThreadRuntime {
     this._utterance = utterance;
 
     return this._utterance;
+  }
+
+  public submitFeedback({ messageId, type }: SubmitFeedbackOptions) {
+    const adapter = this.options.adapters?.feedback;
+    if (!adapter) throw new Error("Feedback adapter not configured");
+
+    const { message } = this.repository.getMessage(messageId);
+    adapter.submit({ message, type });
   }
 
   public export() {

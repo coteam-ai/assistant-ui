@@ -3,12 +3,18 @@ import type { AppendMessage } from "../../types/AssistantTypes";
 import { ReadonlyStore } from "../ReadonlyStore";
 import { ThreadRuntimeStore } from "./ThreadRuntime";
 import { SpeechSynthesisAdapter } from "../../runtimes/speech/SpeechAdapterTypes";
+import { ModelConfig } from "../../types";
 
 export type AddToolResultOptions = {
   messageId: string;
   toolName: string;
   toolCallId: string;
   result: any;
+};
+
+export type SubmitFeedbackOptions = {
+  messageId: string;
+  type: "negative" | "positive";
 };
 
 export type ThreadActionsState = Readonly<{
@@ -22,6 +28,10 @@ export type ThreadActionsState = Readonly<{
   addToolResult: (options: AddToolResultOptions) => void;
 
   speak: (messageId: string) => SpeechSynthesisAdapter.Utterance;
+
+  submitFeedback: (feedback: SubmitFeedbackOptions) => void;
+
+  getModelConfig: () => ModelConfig;
 }>;
 
 export const makeThreadActionStore = (
@@ -42,6 +52,11 @@ export const makeThreadActionStore = (
         runtimeStore.getState().addToolResult(options),
 
       speak: (messageId) => runtimeStore.getState().speak(messageId),
+
+      submitFeedback: ({ messageId, type }) =>
+        runtimeStore.getState().submitFeedback({ messageId, type }),
+
+      getModelConfig: () => runtimeStore.getState().getModelConfig(),
     }),
   );
 };
