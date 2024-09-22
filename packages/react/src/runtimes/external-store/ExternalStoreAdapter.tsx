@@ -1,5 +1,7 @@
 import { AddToolResultOptions } from "../../context";
 import { AppendMessage, ThreadMessage } from "../../types";
+import { AttachmentAdapter } from "../attachment";
+import { FeedbackAdapter } from "../feedback/FeedbackAdapter";
 import { SpeechSynthesisAdapter } from "../speech/SpeechAdapterTypes";
 import { ThreadMessageLike } from "./ThreadMessageLike";
 
@@ -22,17 +24,19 @@ type ExternalStoreAdapterBase<T> = {
   onEdit?: ((message: AppendMessage) => Promise<void>) | undefined;
   onReload?: ((parentId: string | null) => Promise<void>) | undefined;
   onCancel?: (() => Promise<void>) | undefined;
-  onNewThread?: (() => Promise<void> | void) | undefined;
   onAddToolResult?:
     | ((options: AddToolResultOptions) => Promise<void> | void)
     | undefined;
-  onSwitchThread?:
-    | ((threadId: string | null) => Promise<void> | void)
-    | undefined;
+  onSwitchToThread?: ((threadId: string) => Promise<void> | void) | undefined;
+  onSwitchToNewThread?: (() => Promise<void> | void) | undefined;
   onSpeak?:
     | ((message: ThreadMessage) => SpeechSynthesisAdapter.Utterance)
     | undefined;
   convertMessage?: ExternalStoreMessageConverter<T> | undefined;
+  adapters?: {
+    attachments?: AttachmentAdapter | undefined;
+    feedback?: FeedbackAdapter | undefined;
+  };
   unstable_capabilities?:
     | {
         copy?: boolean | undefined;

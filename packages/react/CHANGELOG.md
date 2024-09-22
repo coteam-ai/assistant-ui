@@ -1,5 +1,114 @@
 # @assistant-ui/react
 
+## 0.5.60
+
+### Patch Changes
+
+- 926dce5: feat: Feedback Primtives, UI and Adapter
+- 155d6e7: chore: update dependencies
+- f80226f: feat: ThreadActions.getModelConfig
+
+## 0.5.59
+
+### Patch Changes
+
+- 0f547a9: fix: useSmooth should work inside TextContentPartProvider
+
+## 0.5.58
+
+### Patch Changes
+
+- 6507071: fix: TextContentPartProvider text streaming support
+- 6507071: feat: TextContentPartProvider isRunning
+
+## 0.5.57
+
+### Patch Changes
+
+- 745d6e1: fix(runtimes/external-store): switch to thread should correctly copy the entire store
+- 745d6e1: fix: only deprecate the null usage of switchToThread
+
+## 0.5.56
+
+### Patch Changes
+
+- e4863bb: feat(runtimes/external): add onSwitchToNewThread callback
+- e4863bb: feat: add attachmentAccept to ThreadComposer
+
+## 0.5.55
+
+### Patch Changes
+
+- b0a22e3: feat: runtime.switchToNewThread()
+- 11ca453: refactor: drop useModelConfig Context - use useAssistantActions instead
+
+## 0.5.54
+
+### Patch Changes
+
+- 0f99aa6: feat: New Context API
+- c348553: chore: update dependencies
+
+## 0.5.53
+
+### Patch Changes
+
+- f0f7497: feat: MessageContent Empty should be displayed for empty messages with empty text part
+- 8555685: feat: allow editing assistant/system messages
+- 892b019: fix: Empty should default to the provided Text component
+
+## 0.5.52
+
+### Patch Changes
+
+- c0f975a: feat: TextContentPartProvider
+
+## 0.5.51
+
+### Patch Changes
+
+- 164e46c: feat: ignore edits with text part unchanged
+- 5eccae7: fix: createActionButton disabled handling
+
+## 0.5.50
+
+### Patch Changes
+
+- 04f6fc8: chore: update deps
+
+## 0.5.49
+
+### Patch Changes
+
+- 7ed296b: fix: make AppendMessage attachments field optional for now
+
+## 0.5.48
+
+### Patch Changes
+
+- 25a711d: fix: user message action bar css
+
+## 0.5.47
+
+### Patch Changes
+
+- a81b18f: feat: ComposerPrimitive.AddAttachment
+- 44d08bd: feat: styled components for attachments
+- b48fbcc: feat: UserMessageAttachment UI
+- cc5e7d4: perf: memoize tool Ul components
+- bdd3084: feat: allow runtimes to signal support for attachments
+- 7dcab47: fix: message copy handling for runtimes
+- a22e6bb: feat: AttachmentAdapter.accept allow attachment adapters to specify supported file types
+- 9e00772: feat: add composer attachments state
+- d2580d3: feat: SimpleImageAttachmentAdapter
+- c845fcf: feat: allow sending attachment-only messages
+- 3ba193e: feat: AttachmentContext
+- d2580d3: feat: SimpleTextAttachmentAdapter
+- 3b0f20b: feat: MessagePrimitive.Attachments
+- 3ba193e: feat: ComposerPrimitive.Attachments
+- d2580d3: feat: CompositeAttachmentAdapter
+- 44d08bd: feat: Edge/Local runtime AttachmentAdapter support
+
 ## 0.5.46
 
 ### Patch Changes

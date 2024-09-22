@@ -7,7 +7,7 @@ import {
   ComponentPropsWithoutRef,
   useCallback,
 } from "react";
-import { useMessageContext } from "../../context/react/MessageContext";
+import { useMessageUtilsStore } from "../../context/react/MessageContext";
 import { useManagedRef } from "../../utils/hooks/useManagedRef";
 import { useComposedRefs } from "@radix-ui/react-compose-refs";
 
@@ -15,11 +15,10 @@ type MessagePrimitiveRootElement = ElementRef<typeof Primitive.div>;
 type PrimitiveDivProps = ComponentPropsWithoutRef<typeof Primitive.div>;
 
 const useIsHoveringRef = () => {
-  const { useMessageUtils } = useMessageContext();
-
+  const messageUtilsStore = useMessageUtilsStore();
   const callbackRef = useCallback(
     (el: HTMLElement) => {
-      const setIsHovering = useMessageUtils.getState().setIsHovering;
+      const setIsHovering = messageUtilsStore.getState().setIsHovering;
 
       const handleMouseEnter = () => {
         setIsHovering(true);
@@ -37,7 +36,7 @@ const useIsHoveringRef = () => {
         setIsHovering(false);
       };
     },
-    [useMessageUtils],
+    [messageUtilsStore],
   );
 
   return useManagedRef(callbackRef);
@@ -48,11 +47,11 @@ export type MessagePrimitiveRootProps = PrimitiveDivProps;
 export const MessagePrimitiveRoot = forwardRef<
   MessagePrimitiveRootElement,
   MessagePrimitiveRootProps
->(({ onMouseEnter, onMouseLeave, ...rest }, forwardRef) => {
+>((props, forwardRef) => {
   const isHoveringRef = useIsHoveringRef();
   const ref = useComposedRefs<HTMLDivElement>(forwardRef, isHoveringRef);
 
-  return <Primitive.div {...rest} ref={ref} />;
+  return <Primitive.div {...props} ref={ref} />;
 });
 
 MessagePrimitiveRoot.displayName = "MessagePrimitive.Root";

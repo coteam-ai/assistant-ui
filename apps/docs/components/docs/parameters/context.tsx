@@ -18,64 +18,6 @@ export const AssistantActionsState: ParametersTableProps = {
   ],
 };
 
-export const AssistantModelConfigState: ParametersTableProps = {
-  type: "AssistantModelConfigState",
-  parameters: [
-    {
-      name: "getModelConfig",
-      type: "() => ModelConfig",
-      description: "Gets the current model config.",
-      required: true,
-      children: [
-        {
-          type: "ModelConfig",
-          parameters: [
-            {
-              name: "system",
-              type: "string",
-              description: "The system prompt.",
-            },
-            {
-              name: "tools",
-              type: "Record<string, Tool<any, any>>",
-              description: "The tools available to the model.",
-              children: [
-                {
-                  type: "Tool<TArgs, TResult>",
-                  parameters: [
-                    {
-                      name: "description",
-                      type: "string",
-                      description: "The tool description.",
-                    },
-                    {
-                      name: "parameters",
-                      type: "z.ZodType<TArgs>",
-                      description: "The tool parameters.",
-                    },
-                    {
-                      name: "execute",
-                      type: "(args: TArgs) => Promise<TResult>",
-                      description: "The tool execution function.",
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: "registerModelConfigProvider",
-      type: "(provider: ModelConfigProvider) => Unsubscribe",
-      description:
-        "Registers a model config provider to update the model config.",
-      required: true,
-    },
-  ],
-};
-
 export const AssistantToolUIsState: ParametersTableProps = {
   type: "AssistantToolUIsState",
   parameters: [
@@ -112,73 +54,6 @@ export const AssistantToolUIsState: ParametersTableProps = {
       type: "(toolName: string, render: ToolCallContentPartComponent) => Unsubscribe",
       description: "Sets the tool UI.",
       required: true,
-    },
-  ],
-};
-
-export const AssistantContextValue: ParametersTableProps = {
-  type: "AssistantContextValue",
-  parameters: [
-    {
-      name: "useAssistantActions",
-      type: "ReadonlyStore<AssistantActionsState>",
-      required: true,
-      description: "Provides functions to perform actions on the assistant.",
-    },
-    {
-      name: "useModelConfig",
-      type: "ReadonlyStore<AssistantModelConfigState>",
-      required: true,
-      description: "Configuration of the model (system prompt, tools, etc.)",
-    },
-    {
-      name: "useToolUIs",
-      type: "ReadonlyStore<AssistantToolUIsState>",
-      required: true,
-      description: "Tool UIs to render on tool calls.",
-      children: [],
-    },
-  ],
-};
-
-export const ThreadContextValue: ParametersTableProps = {
-  type: "ThreadContextValue",
-  parameters: [
-    {
-      name: "useThread",
-      type: "ReadonlyStore<ThreadState>",
-      required: true,
-      description: "Provides functions to perform actions on the thread.",
-    },
-    {
-      name: "useThreadMessages",
-      type: "ReadonlyStore<ThreadMessagesState>",
-      required: true,
-      description: "Provides functions to perform actions on the thread.",
-    },
-    {
-      name: "useThreadActions",
-      type: "ReadonlyStore<ThreadActionsState>",
-      required: true,
-      description: "Provides functions to perform actions on the thread.",
-    },
-    {
-      name: "useThreadRuntime",
-      type: "ReadonlyStore<ThreadRuntimeState>",
-      required: true,
-      description: "Get the current runtime.",
-    },
-    {
-      name: "useComposer",
-      type: "ReadonlyStore<ComposerState>",
-      required: true,
-      description: "Provides functions to perform actions on the composer.",
-    },
-    {
-      name: "useViewport",
-      type: "ReadonlyStore<ThreadViewportState>",
-      required: true,
-      description: "Provides functions to perform actions on the viewport.",
     },
   ],
 };
@@ -522,26 +397,26 @@ export const MessageUtilsState: ParametersTableProps = {
   ],
 };
 
-export const AttachmentContextValue: ParametersTableProps = {
-  type: "AttachmentContextValue",
+export const ComposerAttachmentState: ParametersTableProps = {
+  type: "ComposerAttachmentState",
   parameters: [
     {
-      name: "useAttachment",
-      type: "ReadonlyStore<AttachmentState>",
+      name: "attachment",
+      type: "ComposerAttachment",
       required: true,
-      description: "Provides functions to perform actions on the attachment.",
+      description: "The current composer attachment.",
     },
   ],
 };
 
-export const AttachmentState: ParametersTableProps = {
-  type: "AttachmentState",
+export const MessageAttachmentState: ParametersTableProps = {
+  type: "MessageAttachmentState",
   parameters: [
     {
       name: "attachment",
-      type: "Attachment",
+      type: "MessageAttachment",
       required: true,
-      description: "The current attachment.",
+      description: "The current message attachment.",
     },
   ],
 };

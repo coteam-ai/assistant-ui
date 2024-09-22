@@ -1,4 +1,4 @@
-import { Attachment } from "../../context/stores/Attachment";
+import { ThreadComposerAttachment } from "../../context/stores/Attachment";
 import { RuntimeCapabilities } from "../../context/stores/Thread";
 import { ThreadActionsState } from "../../context/stores/ThreadActions";
 import { ThreadMessage } from "../../types";
@@ -16,9 +16,12 @@ export type ThreadRuntime = ThreadActionsState &
 
 export declare namespace ThreadRuntime {
   export type Composer = Readonly<{
-    attachments: Attachment[];
+    attachmentAccept: string;
+    attachments: ThreadComposerAttachment[];
     addAttachment: (file: File) => Promise<void>;
     removeAttachment: (attachmentId: string) => Promise<void>;
+
+    isEmpty: boolean;
 
     text: string;
     setText: (value: string) => void;
@@ -26,5 +29,7 @@ export declare namespace ThreadRuntime {
     reset: () => void;
 
     send: () => void;
+
+    subscribe: (callback: () => void) => Unsubscribe;
   }>;
 }

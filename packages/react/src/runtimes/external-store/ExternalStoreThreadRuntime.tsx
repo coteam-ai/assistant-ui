@@ -1,6 +1,11 @@
 import { ReactThreadRuntime } from "../core";
 import { MessageRepository } from "../utils/MessageRepository";
-import { AppendMessage, ThreadMessage, Unsubscribe } from "../../types";
+import {
+  AppendMessage,
+  ModelConfigProvider,
+  ThreadMessage,
+  Unsubscribe,
+} from "../../types";
 import { ExternalStoreAdapter } from "./ExternalStoreAdapter";
 import { AddToolResultOptions } from "../../context";
 import {
@@ -14,6 +19,7 @@ import { RuntimeCapabilities } from "../../context/stores/Thread";
 import { getThreadMessageText } from "../../utils/getThreadMessageText";
 import { generateId } from "../../internal";
 import { ThreadRuntimeComposer } from "../utils/ThreadRuntimeComposer";
+import { SubmitFeedbackOptions } from "../../context/stores/ThreadActions";
 
 export const hasUpcomingMessage = (
   isRunning: boolean,
@@ -35,6 +41,7 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
     unstable_copy: false,
     speak: false,
     attachments: false,
+    feedback: false,
   };
 
   public get capabilities() {
@@ -48,12 +55,12 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
 
   private _store!: ExternalStoreAdapter<any>;
 
-  public readonly composer = new ThreadRuntimeComposer(
-    this,
-    this.notifySubscribers.bind(this),
-  );
+  public readonly composer = new ThreadRuntimeComposer(this);
 
-  constructor(store: ExternalStoreAdapter<any>) {
+  constructor(
+    private configProvider: ModelConfigProvider,
+    store: ExternalStoreAdapter<any>,
+  ) {
     this.store = store;
   }
 
@@ -75,10 +82,13 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
       edit: this._store.onEdit !== undefined,
       reload: this._store.onReload !== undefined,
       cancel: this._store.onCancel !== undefined,
-      unstable_copy: this._store.unstable_capabilities?.copy !== null,
       speak: this._store.onSpeak !== undefined,
-      attachments: false,
+      unstable_copy: this._store.unstable_capabilities?.copy !== false, // default true
+      attachments: !!this.store.adapters?.attachments,
+      feedback: !!this.store.adapters?.feedback,
     };
+
+    this.composer.setAttachmentAdapter(this._store.adapters?.attachments);
 
     if (oldStore) {
       // flush the converter cache when the convertMessage prop changes
@@ -146,6 +156,10 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
 
     this.messages = this.repository.getMessages();
     this.notifySubscribers();
+  }
+
+  public getModelConfig() {
+    return this.configProvider.getModelConfig();
   }
 
   private notifySubscribers() {
@@ -226,6 +240,14 @@ export class ExternalStoreThreadRuntime implements ReactThreadRuntime {
 
     const { message } = this.repository.getMessage(messageId);
     return this._store.onSpeak(message);
+  }
+
+  public submitFeedback({ messageId, type }: SubmitFeedbackOptions) {
+    const adapter = this._store.adapters?.feedback;
+    if (!adapter) throw new Error("Feedback adapter not configured");
+
+    const { message } = this.repository.getMessage(messageId);
+    adapter.submit({ message, type });
   }
 
   public subscribe(callback: () => void): Unsubscribe {

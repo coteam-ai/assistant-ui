@@ -1,5 +1,29 @@
 # assistant-ui
 
+## 0.0.11
+
+### Patch Changes
+
+- 155d6e7: chore: update dependencies
+
+## 0.0.10
+
+### Patch Changes
+
+- c348553: chore: update dependencies
+
+## 0.0.9
+
+### Patch Changes
+
+- 7faa03b: cli: create -t langgraph
+
+## 0.0.8
+
+### Patch Changes
+
+- 7d7bbce: fix: create command windows compatibility
+
 ## 0.0.7
 
 ### Patch Changes

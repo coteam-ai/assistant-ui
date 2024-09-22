@@ -1,10 +1,11 @@
-import { Attachment } from "../../context/stores/Attachment";
-import { CoreUserContentPart } from "../../types";
+import {
+  ThreadComposerAttachment,
+  MessageAttachment,
+} from "../../context/stores/Attachment";
 
 export type AttachmentAdapter = {
-  add(state: { file: File }): Promise<Attachment>;
-  send(attachment: Attachment): Promise<{
-    content: CoreUserContentPart[];
-  }>;
-  remove(attachment: Attachment): Promise<void>;
+  accept: string;
+  add(state: { file: File }): Promise<ThreadComposerAttachment>;
+  remove(attachment: ThreadComposerAttachment): Promise<void>;
+  send(attachment: ThreadComposerAttachment): Promise<MessageAttachment>;
 };

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAssistantContext } from "../context/react/AssistantContext";
+import {
+  useAssistantActionsStore,
+  useToolUIsStore,
+} from "../context/react/AssistantContext";
 import type { ToolCallContentPartComponent } from "../types/ContentPartComponentTypes";
 import type { Tool } from "../types/ModelConfigTypes";
 
@@ -19,11 +22,8 @@ export const useAssistantTool = <
 >(
   tool: AssistantToolProps<TArgs, TResult>,
 ) => {
-  const { useModelConfig, useToolUIs } = useAssistantContext();
-  const registerModelConfigProvider = useModelConfig(
-    (s) => s.registerModelConfigProvider,
-  );
-  const setToolUI = useToolUIs((s) => s.setToolUI);
+  const assistantActionsStore = useAssistantActionsStore();
+  const toolUIsStore = useToolUIsStore();
   useEffect(() => {
     const { toolName, render, ...rest } = tool;
     const config = {
@@ -31,13 +31,17 @@ export const useAssistantTool = <
         [tool.toolName]: rest,
       },
     };
-    const unsub1 = registerModelConfigProvider({
-      getModelConfig: () => config,
-    });
-    const unsub2 = render ? setToolUI(toolName, render) : undefined;
+    const unsub1 = assistantActionsStore
+      .getState()
+      .registerModelConfigProvider({
+        getModelConfig: () => config,
+      });
+    const unsub2 = render
+      ? toolUIsStore.getState().setToolUI(toolName, render)
+      : undefined;
     return () => {
       unsub1();
       unsub2?.();
     };
-  }, [registerModelConfigProvider, setToolUI, tool]);
+  }, [assistantActionsStore, toolUIsStore, tool]);
 };

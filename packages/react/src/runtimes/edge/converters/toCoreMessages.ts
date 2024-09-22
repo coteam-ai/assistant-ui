@@ -1,4 +1,4 @@
-  import { ThreadMessage, CoreMessage } from "../../../types";
+import { ThreadMessage, CoreMessage } from "../../../types";
 
 export const toCoreMessages = (message: ThreadMessage[]): CoreMessage[] => {
   return message.map(toCoreMessage);
@@ -24,10 +24,14 @@ export const toCoreMessage = (message: ThreadMessage): CoreMessage => {
     case "user":
       return {
         role,
-        content: message.content.map((part) => {
-          if (part.type === "ui") throw new Error("UI parts are not supported");
-          return part;
-        }),
+        content: [
+          ...message.content.map((part) => {
+            if (part.type === "ui")
+              throw new Error("UI parts are not supported");
+            return part;
+          }),
+          ...message.attachments.map((a) => a.content).flat(),
+        ],
         id: message.id,
       };
 

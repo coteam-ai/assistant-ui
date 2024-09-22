@@ -12,8 +12,9 @@ import {
 import { AvatarProps } from "./base/avatar";
 import { TextContentPartComponent, ToolCallContentPartProps } from "../types";
 import { AssistantRuntime } from "../runtimes";
-import { AssistantRuntimeProvider, useAssistantContext } from "../context";
+import { AssistantRuntimeProvider } from "../context";
 import { AssistantToolUI } from "../model-config";
+import { useAssistantRuntimeStore as useAssistantActionsStore } from "../context/react/AssistantContext";
 
 export type SuggestionConfig = {
   text?: ReactNode;
@@ -33,6 +34,8 @@ export type AssistantMessageConfig = {
   allowReload?: boolean | undefined;
   allowCopy?: boolean | undefined;
   allowSpeak?: boolean | undefined;
+  allowFeedbackPositive?: boolean | undefined;
+  allowFeedbackNegative?: boolean | undefined;
   components?:
     | {
         Text?: TextContentPartComponent | undefined;
@@ -82,6 +85,14 @@ export type StringsConfig = {
     speak?: {
       tooltip?: string | undefined;
       stop?: {
+        tooltip?: string | undefined;
+      };
+    };
+    feedback?: {
+      positive?: {
+        tooltip?: string | undefined;
+      };
+      negative?: {
         tooltip?: string | undefined;
       };
     };
@@ -166,7 +177,7 @@ export const ThreadConfigProvider: FC<ThreadConfigProviderProps> = ({
   children,
   config,
 }) => {
-  const assistant = useAssistantContext({ optional: true });
+  const hasAssistant = !!useAssistantActionsStore({ optional: true });
 
   const configProvider =
     config && Object.keys(config ?? {}).length > 0 ? (
@@ -178,7 +189,7 @@ export const ThreadConfigProvider: FC<ThreadConfigProviderProps> = ({
     );
   if (!config?.runtime) return configProvider;
 
-  if (assistant) {
+  if (hasAssistant) {
     throw new Error(
       "You provided a runtime to <Thread> while simulataneously using <AssistantRuntimeProvider>. This is not allowed.",
     );
