@@ -1,11 +1,10 @@
 "use client";
 
 import { ChangeEvent, FC, PropsWithChildren, useState } from "react";
-import { Tool, useAssistantActionsStore } from "@assistant-ui/react";
+import { Tool, useAssistantRuntime } from "@assistant-ui/react";
 import { PayloadEditorButton } from "../../payload-editor-button";
 import { Thread } from "./thread";
 import { Button } from "../button";
-
 import {
   Dialog,
   DialogContent,
@@ -322,9 +321,9 @@ const Sidebar: FC<AssistantPlaygroundProps> = ({
   modelSelector,
   apiKey = true,
 }) => {
-  const assistantActionsStore = useAssistantActionsStore();
+  const assistantRuntime = useAssistantRuntime();
   const handleReset = () => {
-    assistantActionsStore.getState().switchToNewThread();
+    assistantRuntime.switchToNewThread();
   };
 
   return (

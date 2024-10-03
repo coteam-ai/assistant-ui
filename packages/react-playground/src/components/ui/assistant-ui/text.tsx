@@ -1,14 +1,17 @@
-import { TextContentPartComponent, useMessageStore } from "@assistant-ui/react";
+import {
+  TextContentPartComponent,
+  useMessageRuntime,
+} from "@assistant-ui/react";
 import TextareaAutosize from "react-textarea-autosize";
-import { useGetPlaygroundRuntime } from "../../../lib/usePlaygroundRuntime";
+import { usePlaygroundRuntime } from "../../../lib/usePlaygroundRuntime";
 
-export const Text: TextContentPartComponent = ({ part }) => {
-  const getPlaygroundRuntime = useGetPlaygroundRuntime();
-  const messageStore = useMessageStore();
+export const Text: TextContentPartComponent = (part) => {
+  const runtime = usePlaygroundRuntime();
+  const messageRuntime = useMessageRuntime();
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     try {
-      getPlaygroundRuntime().setMessageText({
-        messageId: messageStore.getState().message.id,
+      runtime.setMessageText({
+        messageId: messageRuntime.getState().id,
         contentPart: part,
         text: e.target.value,
       });

@@ -1,18 +1,18 @@
-import { useContentPartStore, useMessageStore } from "@assistant-ui/react";
 import { TooltipIconButton } from "./tooltip-icon-button";
 import { CircleXIcon } from "lucide-react";
 import { FC } from "react";
-import { useGetPlaygroundRuntime } from "../../../lib/usePlaygroundRuntime";
+import { usePlaygroundRuntime } from "../../../lib/usePlaygroundRuntime";
+import { useContentPartRuntime, useMessageRuntime } from "@assistant-ui/react";
 
 export const RemoveContentPartButton: FC = () => {
-  const getPlaygroundRuntime = useGetPlaygroundRuntime();
+  const runtime = usePlaygroundRuntime();
 
-  const messageStore = useMessageStore();
-  const contentPartStore = useContentPartStore();
+  const messageRuntime = useMessageRuntime();
+  const contentPartRuntime = useContentPartRuntime();
   const handleRemove = () => {
-    getPlaygroundRuntime().deleteContentPart(
-      messageStore.getState().message.id,
-      contentPartStore.getState().part,
+    runtime.deleteContentPart(
+      messageRuntime.getState().id,
+      contentPartRuntime.getState(),
     );
   };
 

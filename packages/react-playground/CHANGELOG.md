@@ -1,5 +1,75 @@
 # @assistant-ui/react-playground
 
+## 0.0.34
+
+### Patch Changes
+
+- 96b9d1f: feat: new Runtime API part 8
+- d8bd40b: chore: update dependencies
+- 42156cf: refactor: drop ReactThreadRuntimeCore, unstable_synchronizer
+- Updated dependencies [96b9d1f]
+- Updated dependencies [9fd85da]
+- Updated dependencies [d8bd40b]
+- Updated dependencies [42156cf]
+  - @assistant-ui/react@0.5.68
+
+## 0.0.33
+
+### Patch Changes
+
+- 70720ba: feat: lift EditComposer to runtime layer
+- Updated dependencies [cfa8844]
+- Updated dependencies [70720ba]
+  - @assistant-ui/react@0.5.67
+
+## 0.0.32
+
+### Patch Changes
+
+- 3f549b2: refactor: rename internal export
+- Updated dependencies [325b049]
+- Updated dependencies [df9ec8f]
+- Updated dependencies [3f549b2]
+  - @assistant-ui/react@0.5.66
+
+## 0.0.31
+
+### Patch Changes
+
+- 27208fb: fix: only include "use client" banner in ESM builds
+- Updated dependencies [27208fb]
+  - @assistant-ui/react@0.5.65
+
+## 0.0.30
+
+### Patch Changes
+
+- ed24305: fix: add newline after "use client" for .js builds
+- Updated dependencies [ed24305]
+  - @assistant-ui/react@0.5.64
+
+## 0.0.29
+
+### Patch Changes
+
+- c438773: feat: allow disabling ComposerInput keyboard shortcuts
+- e1ae3d0: chore: update dependencies
+- Updated dependencies [c438773]
+- Updated dependencies [e1ae3d0]
+  - @assistant-ui/react@0.5.63
+
+## 0.0.28
+
+### Patch Changes
+
+- 88957ac: feat: New unified Runtime API (part 1/n)
+- 3970adc: refactor: remove useGetPlaygroundRuntime
+- 1a99132: feat: ThreadRuntime.Composer subscribe
+- Updated dependencies [88957ac]
+- Updated dependencies [1a99132]
+- Updated dependencies [3187013]
+  - @assistant-ui/react@0.5.61
+
 ## 0.0.27
 
 ### Patch Changes

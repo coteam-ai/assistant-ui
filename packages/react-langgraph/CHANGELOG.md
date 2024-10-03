@@ -1,5 +1,33 @@
 # @assistant-ui/react-langgraph
 
+## 0.0.12
+
+### Patch Changes
+
+- ff1f478: chore: update
+
+## 0.0.11
+
+### Patch Changes
+
+- 0a8202e: fix: tool UI result can arrive before assistant message is marked as complete
+
+## 0.0.10
+
+### Patch Changes
+
+- 51c5dff: fix: LangGraph python compatibility
+
+## 0.0.9
+
+### Patch Changes
+
+- 88957ac: feat: New unified Runtime API (part 1/n)
+- Updated dependencies [88957ac]
+- Updated dependencies [1a99132]
+- Updated dependencies [3187013]
+  - @assistant-ui/react@0.5.61
+
 ## 0.0.8
 
 ### Patch Changes

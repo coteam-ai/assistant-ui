@@ -1,10 +1,20 @@
 export {
-  useAssistantActions,
-  useAssistantActionsStore,
   useAssistantRuntime,
-  useAssistantRuntimeStore,
   useToolUIs,
   useToolUIsStore,
+
+  /**
+   * @deprecated Use `useAssistantRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useAssistantActions,
+  /**
+   * @deprecated Use `useAssistantRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useAssistantActionsStore,
+  /**
+   * @deprecated Use `useAssistantRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useAssistantRuntimeStore,
 
   /**
    * @deprecated You can import the hooks directly, e.g. `import { useAssistantRuntime } from "@assistant-ui/react"`. This will be removed in 0.6.0.
@@ -15,18 +25,49 @@ export {
    */
   useAssistantContext,
 } from "./AssistantContext";
+
 export {
-  useThread,
-  useThreadStore,
-  useThreadMessages,
-  useThreadMessagesStore,
-  useThreadActions,
-  useThreadActionsStore,
   useThreadRuntime,
-  useThreadRuntimeStore,
-  useThreadViewport,
-  useThreadViewportStore,
+  useThread,
   useThreadComposer,
+
+  /**
+   * @deprecated Use `useThread().messages` instead. This will be removed in 0.6.0.
+   */
+  useThreadMessages,
+
+  /**
+   * @deprecated Use `useThreadRuntime().getState()` instead. This will be removed in 0.6.0.
+   */
+  useThreadStore,
+
+  /**
+   * @deprecated Use `useThreadRuntime().getState().messages` instead. This will be removed in 0.6.0.
+   */
+  useThreadMessagesStore,
+
+  /**
+   * @deprecated Use `useThreadRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useThreadActions,
+
+  /**
+   * @deprecated Use `useThreadRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useThreadActionsStore,
+
+  /**
+   * @deprecated Use `useThreadRuntime()` instead. This will be removed in 0.6.0.
+   */
+  useThreadRuntimeStore,
+  // TODO move out of runtime context after 0.6.0
+  useThreadViewport,
+  // TODO move out of runtime context after 0.6.0
+  useThreadViewportStore,
+
+  /**
+   * @deprecated Use `useThreadRuntime().composer.getState()` instead. This will be removed in 0.6.0.
+   */
   useThreadComposerStore,
 
   /**
@@ -39,11 +80,20 @@ export {
   useThreadContext,
 } from "./ThreadContext";
 export {
+  useMessageRuntime,
   useMessage,
-  useMessageStore,
+  useEditComposer,
   useMessageUtils,
   useMessageUtilsStore,
-  useEditComposer,
+
+  /**
+   * @deprecated Use `useMessageRuntime().getState()` instead. This will be removed in 0.6.0.
+   */
+  useMessageStore,
+
+  /**
+   * @deprecated Use `useMessageRuntime().composer.getState()` instead. This will be removed in 0.6.0.
+   */
   useEditComposerStore,
 
   /**
@@ -56,7 +106,12 @@ export {
   useMessageContext,
 } from "./MessageContext";
 export {
+  useContentPartRuntime,
   useContentPart,
+
+  /**
+   * @deprecated Use `useContentPartRuntime().getState()` instead. This will be removed in 0.6.0.
+   */
   useContentPartStore,
 
   /**
@@ -69,7 +124,12 @@ export {
   useContentPartContext,
 } from "./ContentPartContext";
 export {
+  useComposerRuntime,
   useComposer,
+
+  /**
+   * @deprecated Use `useComposerRuntime().getState()` instead. This will be removed in 0.6.0.
+   */
   useComposerStore,
 
   /**

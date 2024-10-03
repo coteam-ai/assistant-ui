@@ -1,6 +1,6 @@
 import { LanguageModelV1LogProbs } from "@ai-sdk/provider";
 import type { ReactNode } from "react";
-import { MessageAttachment } from "../context/stores/Attachment";
+import { CompleteAttachment } from "./AttachmentTypes";
 
 export type TextContentPart = {
   type: "text";
@@ -113,7 +113,7 @@ export type ThreadSystemMessage = MessageCommonProps & {
 export type ThreadUserMessage = MessageCommonProps & {
   role: "user";
   content: ThreadUserContentPart[];
-  attachments: readonly MessageAttachment[];
+  attachments: readonly CompleteAttachment[];
   // TODO metadata
 };
 
@@ -134,13 +134,17 @@ export type ThreadAssistantMessage = MessageCommonProps & {
 export type AppendMessage = CoreMessage & {
   parentId: string | null;
   // TODO make required in the next major version
-  attachments?: readonly MessageAttachment[];
+  attachments?: readonly CompleteAttachment[] | undefined;
 };
 
-export type ThreadMessage =
-  | ThreadSystemMessage
-  | ThreadUserMessage
-  | ThreadAssistantMessage;
+type BaseThreadMessage = {
+  status?: ThreadAssistantMessage["status"];
+  metadata?: ThreadAssistantMessage["metadata"];
+  attachments?: ThreadUserMessage["attachments"];
+};
+
+export type ThreadMessage = BaseThreadMessage &
+  (ThreadSystemMessage | ThreadUserMessage | ThreadAssistantMessage);
 
 /** Core Message Types (without UI content parts) */
 

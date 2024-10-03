@@ -2,7 +2,6 @@
 
 import type { FC, PropsWithChildren } from "react";
 import { useEffect, useState } from "react";
-import { ContentPartState } from "../stores";
 import { create } from "zustand";
 import {
   ContentPartContext,
@@ -10,6 +9,10 @@ import {
 } from "../react/ContentPartContext";
 import { ContentPartStatus, TextContentPart } from "../../types/AssistantTypes";
 import { writableStore } from "../ReadonlyStore";
+import {
+  ContentPartRuntimeImpl,
+  ContentPartState,
+} from "../../api/ContentPartRuntime";
 
 type TextContentPartProviderProps = {
   text: string;
@@ -28,22 +31,26 @@ export const TextContentPartProvider: FC<
   PropsWithChildren<TextContentPartProviderProps>
 > = ({ children, text, isRunning }) => {
   const [context] = useState<ContentPartContextValue>(() => {
+    const useContentPartRuntime = create(
+      // TODO
+      () => new ContentPartRuntimeImpl(null as any, null as any, null as any),
+    );
     const useContentPart = create<ContentPartState>(() => ({
       status: isRunning ? RUNNING_STATUS : COMPLETE_STATUS,
       part: { type: "text", text },
+      type: "text",
+      text,
     }));
 
-    return {
-      useContentPart,
-    };
+    return { useContentPartRuntime, useContentPart };
   });
 
   useEffect(() => {
-    const state = context.useContentPart.getState();
-    const textUpdated = (state.part as TextContentPart).text !== text;
-    const targetTextPart = textUpdated
-      ? { type: "text" as const, text }
-      : state.part;
+    const state = context.useContentPart.getState() as ContentPartState & {
+      type: "text";
+    };
+
+    const textUpdated = (state as TextContentPart).text !== text;
     const targetStatus = isRunning ? RUNNING_STATUS : COMPLETE_STATUS;
     const statusUpdated = state.status !== targetStatus;
 
@@ -51,9 +58,11 @@ export const TextContentPartProvider: FC<
 
     writableStore(context.useContentPart).setState(
       {
-        part: targetTextPart,
+        type: "text",
+        text,
+        part: { type: "text", text },
         status: targetStatus,
-      },
+      } satisfies ContentPartState,
       true,
     );
   }, [context, isRunning, text]);

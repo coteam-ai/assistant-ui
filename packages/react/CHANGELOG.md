@@ -1,5 +1,74 @@
 # @assistant-ui/react
 
+## 0.5.70
+
+### Patch Changes
+
+- 3df0061: fix: TextContentPartProvider missing fields
+
+## 0.5.69
+
+### Patch Changes
+
+- 46f91c2: feat(langgraph): allow disabling autocancellation of pending tool calls
+
+## 0.5.68
+
+### Patch Changes
+
+- 96b9d1f: feat: new Runtime API part 8
+- 9fd85da: fix: ensure branch picker is supported before showing it
+- d8bd40b: chore: update dependencies
+- 42156cf: refactor: drop ReactThreadRuntimeCore, unstable_synchronizer
+
+## 0.5.67
+
+### Patch Changes
+
+- cfa8844: feat: useComposerRuntime hook
+- 70720ba: feat: lift EditComposer to runtime layer
+
+## 0.5.66
+
+### Patch Changes
+
+- 325b049: fix: include attachments prop in the useExternalMessageConverter
+- df9ec8f: feat: new Runtime API rollout part 2
+- 3f549b2: refactor: rename internal export
+
+## 0.5.65
+
+### Patch Changes
+
+- 27208fb: fix: only include "use client" banner in ESM builds
+
+## 0.5.64
+
+### Patch Changes
+
+- ed24305: fix: add newline after "use client" for .js builds
+
+## 0.5.63
+
+### Patch Changes
+
+- c438773: feat: allow disabling ComposerInput keyboard shortcuts
+- e1ae3d0: chore: update dependencies
+
+## 0.5.62
+
+### Patch Changes
+
+- cd1b286: fix: BranchPicker styles
+
+## 0.5.61
+
+### Patch Changes
+
+- 88957ac: feat: New unified Runtime API (part 1/n)
+- 1a99132: feat: ThreadRuntime.Composer subscribe
+- 3187013: feat: add status, attachments and metadata fields to all messages
+
 ## 0.5.60
 
 ### Patch Changes
