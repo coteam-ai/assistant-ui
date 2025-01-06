@@ -1,5 +1,207 @@
 # @assistant-ui/react-markdown
 
+## 0.7.8
+
+### Patch Changes
+
+- 982a6a2: chore: update dependencies
+- Updated dependencies [982a6a2]
+  - @assistant-ui/react@0.7.30
+
+## 0.7.7
+
+### Patch Changes
+
+- ec3b8cc: chore: update dependencies
+- Updated dependencies [ec3b8cc]
+  - @assistant-ui/react@0.7.19
+
+## 0.7.6
+
+### Patch Changes
+
+- ee77267: fix: react warning about unsupported prop
+- 3214b18: fix: MarkdownText smooth prop not working
+- Updated dependencies [1b16dce]
+- Updated dependencies [b0f309a]
+  - @assistant-ui/react@0.7.18
+
+## 0.7.5
+
+### Patch Changes
+
+- 4c54273: chore: update dependencies
+- 4c54273: refactor: rename components.by_language to componentsByLanguage for react 19 types compat
+- Updated dependencies [4c54273]
+- Updated dependencies [4c54273]
+  - @assistant-ui/react@0.7.12
+
+## 0.7.4
+
+### Patch Changes
+
+- 2276e57: fix: cjs builds
+- Updated dependencies [2276e57]
+- Updated dependencies [e8752ac]
+  - @assistant-ui/react@0.7.9
+
+## 0.7.3
+
+### Patch Changes
+
+- 2112ce8: chore: update dependencies
+- Updated dependencies [589d37b]
+- Updated dependencies [2112ce8]
+  - @assistant-ui/react@0.7.8
+
+## 0.7.2
+
+### Patch Changes
+
+- 933b8c0: chore: update deps
+- Updated dependencies [933b8c0]
+- Updated dependencies [09a2a38]
+  - @assistant-ui/react@0.7.6
+
+## 0.7.1
+
+### Patch Changes
+
+- c59d8b5: chore: update dependencies
+- Updated dependencies [c59d8b5]
+  - @assistant-ui/react@0.7.5
+
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies [c6e886b]
+- Updated dependencies [2912fda]
+  - @assistant-ui/react@0.7.0
+
+## 0.2.27
+
+### Patch Changes
+
+- 1ada091: chore: update deps
+- Updated dependencies [cdcfe1e]
+- Updated dependencies [cdcfe1e]
+- Updated dependencies [94feab2]
+- Updated dependencies [472c548]
+- Updated dependencies [14da684]
+- Updated dependencies [1ada091]
+  - @assistant-ui/react@0.5.99
+
+## 0.2.26
+
+### Patch Changes
+
+- ff5b86c: build: refactor build script into @assistant-ui/tsbuildutils
+- ff5b86c: fix: better ESM compatibility
+- ff5b86c: chore: update deps
+- Updated dependencies [ff5b86c]
+- Updated dependencies [ff5b86c]
+- Updated dependencies [ff5b86c]
+  - @assistant-ui/react@0.5.98
+
+## 0.2.25
+
+### Patch Changes
+
+- fix: include generated css files in bundle
+- Updated dependencies
+  - @assistant-ui/react@0.5.95
+
+## 0.2.24
+
+### Patch Changes
+
+- fix: correctly include types
+
+## 0.2.23
+
+### Patch Changes
+
+- d2375cd: build: disable bundling in UI package releases
+- Updated dependencies [d2375cd]
+  - @assistant-ui/react@0.5.93
+
+## 0.2.22
+
+### Patch Changes
+
+- feat: use separate classes for markdown elements, drop aui-md-root class
+
+## 0.2.21
+
+### Patch Changes
+
+- 56f80fa: fix: tailwind plugin turbopack interop
+- Updated dependencies [56f80fa]
+  - @assistant-ui/react@0.5.91
+
+## 0.2.20
+
+### Patch Changes
+
+- fb32e61: chore: update deps
+- fb32e61: feat: react-19 support
+- Updated dependencies [2090544]
+- Updated dependencies [be04b5b]
+- Updated dependencies [2090544]
+- Updated dependencies [fb32e61]
+- Updated dependencies [fb32e61]
+  - @assistant-ui/react@0.5.90
+
+## 0.2.19
+
+### Patch Changes
+
+- fb46305: chore: update dependencies
+- Updated dependencies [fb46305]
+- Updated dependencies [e225116]
+- Updated dependencies [0ff22a7]
+- Updated dependencies [378ee99]
+- Updated dependencies [378ee99]
+  - @assistant-ui/react@0.5.73
+
+## 0.2.18
+
+### Patch Changes
+
+- d8bd40b: chore: update dependencies
+- Updated dependencies [96b9d1f]
+- Updated dependencies [9fd85da]
+- Updated dependencies [d8bd40b]
+- Updated dependencies [42156cf]
+  - @assistant-ui/react@0.5.68
+
+## 0.2.17
+
+### Patch Changes
+
+- 27208fb: fix: only include "use client" banner in ESM builds
+- Updated dependencies [27208fb]
+  - @assistant-ui/react@0.5.65
+
+## 0.2.16
+
+### Patch Changes
+
+- ed24305: fix: add newline after "use client" for .js builds
+- Updated dependencies [ed24305]
+  - @assistant-ui/react@0.5.64
+
+## 0.2.15
+
+### Patch Changes
+
+- c438773: feat: allow disabling ComposerInput keyboard shortcuts
+- e1ae3d0: chore: update dependencies
+- Updated dependencies [c438773]
+- Updated dependencies [e1ae3d0]
+  - @assistant-ui/react@0.5.63
+
 ## 0.2.14
 
 ### Patch Changes

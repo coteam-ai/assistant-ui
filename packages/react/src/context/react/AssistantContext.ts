@@ -3,16 +3,16 @@
 import { createContext } from "react";
 import type { AssistantToolUIsState } from "../stores/AssistantToolUIs";
 import { ReadonlyStore } from "../ReadonlyStore";
-import { AssistantActionsState } from "../stores/AssistantActions";
-import { AssistantRuntime } from "../../runtimes";
 import { createContextHook } from "./utils/createContextHook";
 import { createContextStoreHook } from "./utils/createContextStoreHook";
 import { UseBoundStore } from "zustand";
+import { AssistantRuntime } from "../../api/AssistantRuntime";
+import { ThreadListState } from "../../api/ThreadListRuntime";
 
 export type AssistantContextValue = {
   useToolUIs: UseBoundStore<ReadonlyStore<AssistantToolUIsState>>;
   useAssistantRuntime: UseBoundStore<ReadonlyStore<AssistantRuntime>>;
-  useAssistantActions: UseBoundStore<ReadonlyStore<AssistantActionsState>>;
+  useThreadList: UseBoundStore<ReadonlyStore<ThreadListState>>;
 };
 
 export const AssistantContext = createContext<AssistantContextValue | null>(
@@ -24,13 +24,26 @@ export const useAssistantContext = createContextHook(
   "AssistantRuntimeProvider",
 );
 
-export const { useAssistantRuntime, useAssistantRuntimeStore } =
-  createContextStoreHook(useAssistantContext, "useAssistantRuntime");
+export function useAssistantRuntime(options?: {
+  optional?: false | undefined;
+}): AssistantRuntime;
+export function useAssistantRuntime(options?: {
+  optional?: boolean | undefined;
+}): AssistantRuntime | null;
+export function useAssistantRuntime(options?: {
+  optional?: boolean | undefined;
+}) {
+  const context = useAssistantContext(options);
+  if (!context) return null;
+  return context.useAssistantRuntime();
+}
 
 export const { useToolUIs, useToolUIsStore } = createContextStoreHook(
   useAssistantContext,
   "useToolUIs",
 );
 
-export const { useAssistantActions, useAssistantActionsStore } =
-  createContextStoreHook(useAssistantContext, "useAssistantActions");
+export const { useThreadList } = createContextStoreHook(
+  useAssistantContext,
+  "useThreadList",
+);

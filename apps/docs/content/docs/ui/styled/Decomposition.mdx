@@ -24,6 +24,7 @@ const MyThread: FC<ThreadConfig> = (config) => {
       <Thread.Viewport>
         <ThreadWelcome />
         <Thread.Messages />
+        <Thread.FollowupSuggestions />
         <Thread.ViewportFooter>
           <Thread.ScrollToBottom />
           <Composer />
@@ -205,28 +206,32 @@ Renders attachments.
 
 Renders an add attachment button.
 
-## ComposerAttachment
+## AttachmentUI
+
+<Callout type="info" emoji="💡">
+  `AttachmentUI` is still experimental.
+</Callout>
 
 Renders an attachment.
 
 ```tsx
-import { ComposerAttachment } from "@assistant-ui/react";
+import { AttachmentUI } from "@assistant-ui/react";
 
-const MyComposerAttachment: FC = () => {
+const MyAttachmentUI: FC = () => {
   return (
-    <ComposerAttachment.Root>
+    <AttachmentUI.Root>
       attachment
-      <ComposerAttachment.Remove />
-    </ComposerAttachment.Root>
+      <AttachmentUI.Remove />
+    </AttachmentUI.Root>
   );
 };
 ```
 
-### ComposerAttachment.Root
+### AttachmentUI.Root
 
 Contains all parts of the composer attachment.
 
-### ComposerAttachment.Remvoe
+### AttachmentUI.Remove
 
 Renders a remove attachment button.
 
@@ -585,4 +590,40 @@ const MyAssistantModal: FC<ThreadConfig> = (config) => {
 
 ```ts
 <MyAssistantModal />
+```
+
+## ThreadList
+
+Renders a thread list.
+
+```tsx
+import { ThreadList, ThreadListItem } from "@assistant-ui/react";
+
+const MyThreadList = () => {
+  return (
+    <ThreadList.Root>
+      <ThreadList.New />
+      <ThreadList.Items />
+    </ThreadList.Root>
+  );
+};
+```
+
+### ThreadListItem
+
+Renders a thread list item.
+
+```tsx
+import { ThreadListItem, ThreadListItemPrimitive } from "@assistant-ui/react";
+
+const MyThreadListItem = () => {
+  return (
+    <ThreadListItem.Root>
+      <ThreadListItemTrigger>
+        <ThreadListItemTitle />
+      </ThreadListItemTrigger>
+      <ThreadListItem.Archive />
+    </ThreadListItem.Root>
+  );
+};
 ```

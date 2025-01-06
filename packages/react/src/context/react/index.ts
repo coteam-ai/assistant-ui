@@ -1,83 +1,43 @@
 export {
-  useAssistantActions,
-  useAssistantActionsStore,
   useAssistantRuntime,
-  useAssistantRuntimeStore,
+  useThreadList,
   useToolUIs,
   useToolUIsStore,
-
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useAssistantRuntime } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  type AssistantContextValue,
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useAssistantRuntime } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  useAssistantContext,
 } from "./AssistantContext";
+
 export {
-  useThread,
-  useThreadStore,
-  useThreadMessages,
-  useThreadMessagesStore,
-  useThreadActions,
-  useThreadActionsStore,
   useThreadRuntime,
-  useThreadRuntimeStore,
+  useThread,
+  useThreadComposer,
+  useThreadModelConfig,
   useThreadViewport,
   useThreadViewportStore,
-  useThreadComposer,
-  useThreadComposerStore,
-
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useThread } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  type ThreadContextValue,
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useThread } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  useThreadContext,
 } from "./ThreadContext";
+
 export {
+  useThreadListItemRuntime,
+  useThreadListItem,
+} from "./ThreadListItemContext";
+
+export {
+  useMessageRuntime,
   useMessage,
-  useMessageStore,
+  useEditComposer,
   useMessageUtils,
   useMessageUtilsStore,
-  useEditComposer,
-  useEditComposerStore,
-
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useMessage } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  type MessageContextValue,
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useMessage } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  useMessageContext,
 } from "./MessageContext";
-export {
-  useContentPart,
-  useContentPartStore,
+export { useContentPartRuntime, useContentPart } from "./ContentPartContext";
+export { useComposerRuntime, useComposer } from "./ComposerContext";
 
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useContentPart } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  type ContentPartContextValue,
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useContentPart } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  useContentPartContext,
-} from "./ContentPartContext";
 export {
-  useComposer,
-  useComposerStore,
+  useAttachment,
+  useAttachmentRuntime,
 
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useComposer } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  type ComposerContextValue,
-  /**
-   * @deprecated You can import the hooks directly, e.g. `import { useComposer } from "@assistant-ui/react"`. This will be removed in 0.6.0.
-   */
-  useComposerContext,
-} from "./ComposerContext";
+  // TODO decide if we want to export/drop these?
+  // useEditComposerAttachment,
+  // useEditComposerAttachmentRuntime,
+  // useMessageAttachment,
+  // useMessageAttachmentRuntime,
+  // useThreadComposerAttachment,
+  // useThreadComposerAttachmentRuntime,
+} from "./AttachmentContext";

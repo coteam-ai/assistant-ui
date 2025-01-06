@@ -1,44 +1,54 @@
-import { LanguageModelV1LogProbs } from "@ai-sdk/provider";
 import type { ReactNode } from "react";
-import { MessageAttachment } from "../context/stores/Attachment";
+import { CompleteAttachment } from "./AttachmentTypes";
+
+export type MessageRole = "user" | "assistant" | "system";
 
 export type TextContentPart = {
-  type: "text";
-  text: string;
+  readonly type: "text";
+  readonly text: string;
 };
 
 export type ImageContentPart = {
-  type: "image";
-  image: string;
+  readonly type: "image";
+  readonly image: string;
+};
+
+export type Unstable_AudioContentPart = {
+  readonly type: "audio";
+  readonly audio: {
+    readonly data: string;
+    readonly format: "mp3" | "wav";
+  };
 };
 
 export type UIContentPart = {
-  type: "ui";
-  display: ReactNode;
+  readonly type: "ui";
+  readonly display: ReactNode;
 };
 
 export type CoreToolCallContentPart<
   TArgs extends Record<string, unknown> = Record<string | number, unknown>,
   TResult = unknown,
 > = {
-  type: "tool-call";
-  toolCallId: string;
-  toolName: string;
-  args: TArgs;
-  result?: TResult | undefined;
-  isError?: boolean | undefined;
+  readonly type: "tool-call";
+  readonly toolCallId: string;
+  readonly toolName: string;
+  readonly args: TArgs;
+  readonly result?: TResult | undefined;
+  readonly isError?: boolean | undefined;
 };
 
 export type ToolCallContentPart<
   TArgs extends Record<string, unknown> = Record<string | number, unknown>,
   TResult = unknown,
 > = CoreToolCallContentPart<TArgs, TResult> & {
-  argsText: string;
+  readonly argsText: string;
 };
 
 export type ThreadUserContentPart =
   | TextContentPart
   | ImageContentPart
+  | Unstable_AudioContentPart
   | UIContentPart;
 
 export type ThreadAssistantContentPart =
@@ -47,121 +57,145 @@ export type ThreadAssistantContentPart =
   | UIContentPart;
 
 type MessageCommonProps = {
-  id: string;
-  createdAt: Date;
+  readonly id: string;
+  readonly createdAt: Date;
 };
 
-export type ThreadRoundtrip = {
-  logprobs?: LanguageModelV1LogProbs | undefined;
-  usage?:
+export type ThreadStep = {
+  readonly usage?:
     | {
-        promptTokens: number;
-        completionTokens: number;
+        readonly promptTokens: number;
+        readonly completionTokens: number;
       }
     | undefined;
 };
 
 export type ContentPartStatus =
   | {
-      type: "running";
+      readonly type: "running";
     }
   | {
-      type: "complete";
+      readonly type: "complete";
     }
   | {
-      type: "incomplete";
-      reason: "cancelled" | "length" | "content-filter" | "other" | "error";
-      error?: unknown;
+      readonly type: "incomplete";
+      readonly reason:
+        | "cancelled"
+        | "length"
+        | "content-filter"
+        | "other"
+        | "error";
+      readonly error?: unknown;
     };
 
 export type ToolCallContentPartStatus =
   | {
-      type: "requires-action";
-      reason: "tool-calls";
+      readonly type: "requires-action";
+      readonly reason: "tool-calls";
     }
   | ContentPartStatus;
 
 export type MessageStatus =
   | {
-      type: "running";
+      readonly type: "running";
     }
   | {
-      type: "requires-action";
-      reason: "tool-calls";
+      readonly type: "requires-action";
+      readonly reason: "tool-calls";
     }
   | {
-      type: "complete";
-      reason: "stop" | "unknown";
+      readonly type: "complete";
+      readonly reason: "stop" | "unknown";
     }
   | {
-      type: "incomplete";
-      reason:
+      readonly type: "incomplete";
+      readonly reason:
         | "cancelled"
         | "tool-calls"
         | "length"
         | "content-filter"
         | "other"
         | "error";
-      error?: unknown;
+      readonly error?: unknown;
     };
 
 export type ThreadSystemMessage = MessageCommonProps & {
-  role: "system";
-  content: [TextContentPart];
+  readonly role: "system";
+  readonly content: readonly [TextContentPart];
+  readonly metadata: {
+    readonly custom: Record<string, unknown>;
+  };
 };
 
 export type ThreadUserMessage = MessageCommonProps & {
-  role: "user";
-  content: ThreadUserContentPart[];
-  attachments: readonly MessageAttachment[];
-  // TODO metadata
+  readonly role: "user";
+  readonly content: readonly ThreadUserContentPart[];
+  readonly attachments: readonly CompleteAttachment[];
+  readonly metadata: {
+    readonly custom: Record<string, unknown>;
+  };
 };
 
 export type ThreadAssistantMessage = MessageCommonProps & {
-  role: "assistant";
-  content: ThreadAssistantContentPart[];
-  status: MessageStatus;
-  /**
-   * @deprecated Use `metadata.roundtrips` instead.
-   */
-  roundtrips?: ThreadRoundtrip[] | undefined;
-  metadata?: {
-    roundtrips?: ThreadRoundtrip[] | undefined;
-    custom?: Record<string, unknown> | undefined;
+  readonly role: "assistant";
+  readonly content: readonly ThreadAssistantContentPart[];
+  readonly status: MessageStatus;
+  readonly metadata: {
+    readonly unstable_data: readonly unknown[];
+    readonly steps: readonly ThreadStep[];
+    readonly custom: Record<string, unknown>;
   };
+};
+
+export type RunConfig = {
+  // TODO allow user customization via global type overrides
+  readonly custom?: Record<string, unknown>;
 };
 
 export type AppendMessage = CoreMessage & {
   parentId: string | null;
-  // TODO make required in the next major version
-  attachments?: readonly MessageAttachment[];
+  attachments: readonly CompleteAttachment[];
+  startRun?: boolean | undefined;
+  /** TODO: make required in 0.8.0 */
+  runConfig?: RunConfig | undefined;
 };
 
-export type ThreadMessage =
-  | ThreadSystemMessage
-  | ThreadUserMessage
-  | ThreadAssistantMessage;
+type BaseThreadMessage = {
+  readonly status?: ThreadAssistantMessage["status"];
+  readonly metadata: {
+    readonly unstable_data?: readonly unknown[];
+    readonly steps?: readonly ThreadStep[];
+    readonly custom: Record<string, unknown>;
+  };
+  readonly attachments?: ThreadUserMessage["attachments"];
+};
+
+export type ThreadMessage = BaseThreadMessage &
+  (ThreadSystemMessage | ThreadUserMessage | ThreadAssistantMessage);
 
 /** Core Message Types (without UI content parts) */
 
-export type CoreUserContentPart = TextContentPart | ImageContentPart;
+export type CoreUserContentPart =
+  | TextContentPart
+  | ImageContentPart
+  | Unstable_AudioContentPart;
 export type CoreAssistantContentPart =
   | TextContentPart
   | CoreToolCallContentPart;
 
 export type CoreSystemMessage = {
   role: "system";
-  content: [TextContentPart];
+  content: readonly [TextContentPart];
 };
 
 export type CoreUserMessage = {
   role: "user";
-  content: CoreUserContentPart[];
+  content: readonly CoreUserContentPart[];
 };
 
 export type CoreAssistantMessage = {
   role: "assistant";
-  content: CoreAssistantContentPart[];
+  content: readonly CoreAssistantContentPart[];
 };
 
 export type CoreMessage =

@@ -68,12 +68,12 @@ export default function HomePage() {
 
       <div className="mb-8 flex justify-center gap-2">
         <Button asChild>
-          <Link href="/docs">Get Started</Link>
+          <Link href="/docs/getting-started">Get Started</Link>
         </Button>
       </div>
       <div className="mx-auto flex w-full max-w-screen-xl flex-col">
         <p className="font-bold">Examples:</p>
-        <div className="mt-2 flex overflow-x-scroll">
+        <div className="mt-2 flex overflow-x-auto">
           <div className="flex flex-grow gap-3">
             {supportedModels.map((model) => (
               <Badge
@@ -99,7 +99,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center gap-3 self-center">
           <h1 className="text-2xl font-medium">Be part of the community</h1>
           <p>
-            400+ developers are building with assistant-ui, you're in good
+            400+ developers are building with assistant-ui, you&apos;re in good
             company!
           </p>
 

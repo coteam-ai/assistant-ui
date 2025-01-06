@@ -2,15 +2,15 @@
   "title": "mdx",
   "root": true,
   "pages": [
-    "index",
-    "architecture",
+    "getting-started",
+    "guides",
+    "concepts",
+    "migrations",
+    "components",
+    "reference",
     "---UI---",
     "...ui",
     "---Runtimes---",
-    "...runtimes",
-    "---Advanced---",
-    "...advanced",
-    "migrations",
-    "reference"
+    "...runtimes"
   ]
 }

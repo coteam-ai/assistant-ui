@@ -64,12 +64,13 @@ export default function Home() {
               href="https://github.com/Yonom/assistant-ui"
               className="text-blue-600 underline"
             >
-              Assistant UI
+              assistant-ui
             </Link>
             .
           </div>
 
-          <Form {...form}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Form {...(form as any)}>
             <SignupForm />
           </Form>
         </main>

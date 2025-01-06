@@ -1,11 +1,13 @@
 import { FC, PropsWithChildren } from "react";
 import { useContentPart } from "../../context";
 
-export type ContentPartPrimitiveInProgressProps = PropsWithChildren;
+export namespace ContentPartPrimitiveInProgress {
+  export type Props = PropsWithChildren;
+}
 
 // TODO should this be renamed to IsRunning?
 export const ContentPartPrimitiveInProgress: FC<
-  ContentPartPrimitiveInProgressProps
+  ContentPartPrimitiveInProgress.Props
 > = ({ children }) => {
   const isInProgress = useContentPart((c) => c.status.type === "running");
 

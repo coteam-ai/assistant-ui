@@ -1,6 +1,5 @@
-import { ArchiveIcon, EditIcon, MenuIcon, ShareIcon } from "lucide-react";
-import Link from "next/link";
-import { Thread, useSwitchToNewThread } from "@assistant-ui/react";
+import { MenuIcon, ShareIcon } from "lucide-react";
+import { Thread, ThreadList } from "@assistant-ui/react";
 import { makeMarkdownText } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
 import { makePrismAsyncSyntaxHighlighter } from "@assistant-ui/react-syntax-highlighter";
@@ -61,48 +60,20 @@ const ButtonWithTooltip: FC<ButtonWithTooltipProps> = ({
 };
 
 const TopLeft: FC = () => {
-  const switchToNewThread = useSwitchToNewThread();
-
   return (
-    <ButtonWithTooltip
-      onClick={switchToNewThread}
-      variant="ghost"
-      className="flex w-full justify-between px-3"
-      tooltip="New Chat"
-      side="right"
-    >
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <Image
-          src={icon}
-          alt="logo"
-          className="inline size-4 dark:hue-rotate-180 dark:invert"
-        />
-        <span>assistant-ui</span>
-      </div>
-
-      <EditIcon className="size-4" />
-    </ButtonWithTooltip>
+    <div className="flex h-full w-full items-center gap-2 px-3 text-sm font-semibold">
+      <Image
+        src={icon}
+        alt="logo"
+        className="inline size-4 dark:hue-rotate-180 dark:invert"
+      />
+      <span>assistant-ui</span>
+    </div>
   );
 };
 
 const MainLeft: FC = () => {
-  return (
-    <nav className="flex flex-col items-stretch gap-1 text-sm font-medium">
-      <Link
-        href="#"
-        className="bg-muted text-primary hover:text-primary flex items-center gap-3 rounded-lg px-3 py-2 transition-all"
-      >
-        New Chat
-        <ButtonWithTooltip
-          variant={"ghost"}
-          className="hover:text-foreground/60 ml-auto h-auto p-0"
-          tooltip="Archive"
-        >
-          <ArchiveIcon className="size-4" />
-        </ButtonWithTooltip>
-      </Link>
-    </nav>
-  );
+  return <ThreadList />;
 };
 
 const LeftBarSheet: FC = () => {

@@ -9,9 +9,11 @@ import {
   type CodeBlockProps,
   Pre,
 } from "fumadocs-ui/components/codeblock";
-import { Popup, PopupContent, PopupTrigger } from "fumadocs-ui/twoslash/popup";
+import { Popup, PopupContent, PopupTrigger } from "fumadocs-twoslash/ui";
 
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+import "fumadocs-twoslash/twoslash.css";
+
+export function getMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...defaultComponents,
     Popup,

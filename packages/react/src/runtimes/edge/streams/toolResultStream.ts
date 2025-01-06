@@ -1,10 +1,14 @@
 import { Tool } from "../../../types/ModelConfigTypes";
-import { LanguageModelV1StreamPart } from "@ai-sdk/provider";
+import { JSONValue, LanguageModelV1StreamPart } from "@ai-sdk/provider";
 import { z } from "zod";
 import sjson from "secure-json-parse";
 
 export type ToolResultStreamPart =
   | LanguageModelV1StreamPart
+  | {
+      type: "data";
+      data: JSONValue[];
+    }
   | {
       type: "tool-result";
       toolCallType: "function";
@@ -12,6 +16,22 @@ export type ToolResultStreamPart =
       toolName: string;
       result: unknown;
       isError?: boolean;
+    }
+  | {
+      type: "step-finish";
+      finishReason:
+        | "stop"
+        | "length"
+        | "content-filter"
+        | "tool-calls"
+        | "error"
+        | "other"
+        | "unknown";
+      usage: {
+        promptTokens: number;
+        completionTokens: number;
+      };
+      isContinued: boolean;
     };
 
 export function toolResultStream(
@@ -33,7 +53,23 @@ export function toolResultStream(
           const tool = tools?.[toolName];
           if (!tool || !tool.execute) return;
 
-          const args = sjson.parse(argsText);
+          let args;
+          try {
+            args = sjson.parse(argsText);
+          } catch (e) {
+            controller.enqueue({
+              type: "tool-result",
+              toolCallType,
+              toolCallId,
+              toolName,
+              result:
+                "Function parameter parsing failed. " +
+                JSON.stringify((e as Error).message),
+              isError: true,
+            });
+            return;
+          }
+
           if (tool.parameters instanceof z.ZodType) {
             const result = tool.parameters.safeParse(args);
             if (!result.success) {
@@ -48,38 +84,38 @@ export function toolResultStream(
                 isError: true,
               });
               return;
-            } else {
-              toolCallExecutions.set(
-                toolCallId,
-                (async () => {
-                  if (!tool.execute) return;
-
-                  try {
-                    const result = await tool.execute(args, { abortSignal });
-
-                    controller.enqueue({
-                      type: "tool-result",
-                      toolCallType,
-                      toolCallId,
-                      toolName,
-                      result,
-                    });
-                  } catch (error) {
-                    controller.enqueue({
-                      type: "tool-result",
-                      toolCallType,
-                      toolCallId,
-                      toolName,
-                      result: "Error: " + error,
-                      isError: true,
-                    });
-                  } finally {
-                    toolCallExecutions.delete(toolCallId);
-                  }
-                })(),
-              );
             }
           }
+
+          toolCallExecutions.set(
+            toolCallId,
+            (async () => {
+              if (!tool.execute) return;
+
+              try {
+                const result = await tool.execute(args, { abortSignal });
+
+                controller.enqueue({
+                  type: "tool-result",
+                  toolCallType,
+                  toolCallId,
+                  toolName,
+                  result,
+                });
+              } catch (error) {
+                controller.enqueue({
+                  type: "tool-result",
+                  toolCallType,
+                  toolCallId,
+                  toolName,
+                  result: "Error: " + error,
+                  isError: true,
+                });
+              } finally {
+                toolCallExecutions.delete(toolCallId);
+              }
+            })(),
+          );
           break;
         }
 
@@ -87,9 +123,11 @@ export function toolResultStream(
         case "text-delta":
         case "tool-call-delta":
         case "tool-result":
+        case "step-finish":
         case "finish":
         case "error":
         case "response-metadata":
+        case "data":
           break;
 
         default: {

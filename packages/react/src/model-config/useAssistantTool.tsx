@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import {
-  useAssistantActionsStore,
+  useAssistantRuntime,
   useToolUIsStore,
 } from "../context/react/AssistantContext";
 import type { ToolCallContentPartComponent } from "../types/ContentPartComponentTypes";
@@ -14,6 +14,7 @@ export type AssistantToolProps<
 > = Tool<TArgs, TResult> & {
   toolName: string;
   render?: ToolCallContentPartComponent<TArgs, TResult> | undefined;
+  disabled?: boolean | undefined;
 };
 
 export const useAssistantTool = <
@@ -22,26 +23,26 @@ export const useAssistantTool = <
 >(
   tool: AssistantToolProps<TArgs, TResult>,
 ) => {
-  const assistantActionsStore = useAssistantActionsStore();
+  const assistantRuntime = useAssistantRuntime();
   const toolUIsStore = useToolUIsStore();
+
   useEffect(() => {
-    const { toolName, render, ...rest } = tool;
+    return tool.render
+      ? toolUIsStore.getState().setToolUI(tool.toolName, tool.render)
+      : undefined;
+  }, [toolUIsStore, tool.toolName, tool.render]);
+
+  useEffect(() => {
+    const { toolName, render, disabled, ...rest } = tool;
+    if (disabled) return;
+
     const config = {
       tools: {
-        [tool.toolName]: rest,
+        [toolName]: rest,
       },
     };
-    const unsub1 = assistantActionsStore
-      .getState()
-      .registerModelConfigProvider({
-        getModelConfig: () => config,
-      });
-    const unsub2 = render
-      ? toolUIsStore.getState().setToolUI(toolName, render)
-      : undefined;
-    return () => {
-      unsub1();
-      unsub2?.();
-    };
-  }, [assistantActionsStore, toolUIsStore, tool]);
+    return assistantRuntime.registerModelConfigProvider({
+      getModelConfig: () => config,
+    });
+  }, [assistantRuntime, tool]);
 };

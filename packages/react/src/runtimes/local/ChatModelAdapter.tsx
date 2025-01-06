@@ -1,9 +1,13 @@
 "use client";
+
 import type {
   MessageStatus,
+  RunConfig,
+  TextContentPart,
   ThreadAssistantContentPart,
   ThreadMessage,
-  ThreadRoundtrip,
+  ThreadStep,
+  ToolCallContentPart,
 } from "../../types/AssistantTypes";
 import type { ModelConfig } from "../../types/ModelConfigTypes";
 
@@ -13,23 +17,26 @@ export type ChatModelRunUpdate = {
 };
 
 export type ChatModelRunResult = {
-  content?: ThreadAssistantContentPart[];
-  status?: MessageStatus;
+  content?: ThreadAssistantContentPart[] | undefined;
+  status?: MessageStatus | undefined;
   metadata?: {
-    roundtrips?: ThreadRoundtrip[];
-    custom?: Record<string, unknown>;
+    unstable_data?: unknown[] | undefined;
+    steps?: ThreadStep[] | undefined;
+    custom?: Record<string, unknown> | undefined;
   };
+};
+
+export type CoreChatModelRunResult = Omit<ChatModelRunResult, "content"> & {
+  content: (TextContentPart | ToolCallContentPart)[];
 };
 
 export type ChatModelRunOptions = {
   messages: ThreadMessage[];
+  runConfig: RunConfig;
   abortSignal: AbortSignal;
   config: ModelConfig;
 
-  /**
-   * @deprecated Declare the run function as an AsyncGenerator instead. This method will be removed in v0.6
-   */
-  onUpdate: (result: ChatModelRunUpdate) => void;
+  unstable_assistantMessageId?: string;
 };
 
 export type ChatModelAdapter = {

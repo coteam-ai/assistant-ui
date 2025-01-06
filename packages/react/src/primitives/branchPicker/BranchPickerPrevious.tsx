@@ -2,15 +2,17 @@
 
 import { useBranchPickerPrevious } from "../../primitive-hooks/branchPicker/useBranchPickerPrevious";
 import {
+  ActionButtonElement,
   ActionButtonProps,
   createActionButton,
 } from "../../utils/createActionButton";
 
-export type BranchPickerPrimitivePreviousProps = ActionButtonProps<
-  typeof useBranchPickerPrevious
->;
+export namespace BranchPickerPrimitivePrevious {
+  export type Element = ActionButtonElement;
+  export type Props = ActionButtonProps<typeof useBranchPickerPrevious>;
+}
 
-export const BranchPickerPrevious = createActionButton(
+export const BranchPickerPrimitivePrevious = createActionButton(
   "BranchPickerPrimitive.Previous",
   useBranchPickerPrevious,
 );

@@ -3,9 +3,9 @@
 </a>
 
 <p align="center">
-  <a href="https://assistant-ui.com">Product</a> ·
-  <a href="https://assistant-ui.com/docs">Documentation</a> ·
-  <a href="https://assistant-ui.com/examples">Examples</a> ·
+  <a href="https://www.assistant-ui.com">Product</a> ·
+  <a href="https://www.assistant-ui.com/docs/getting-started">Documentation</a> ·
+  <a href="https://www.assistant-ui.com/examples">Examples</a> ·
   <a href="https://discord.gg/S9dwgCNEFs">Discord Community</a> ·
   <a href="https://cal.com/simon-farshid/assistant-ui">Contact Sales</a>
 </p>
@@ -21,7 +21,7 @@ Wide model provider support (OpenAI, Anthropic, Mistral, Perplexity, AWS Bedrock
 Step 1: Create a new project with `assistant-ui` pre-configured:
 
 ```sh
-npx assistant-ui@latest create my-app
+npx create-assistant-ui@latest my-app
 cd my-app
 ```
 

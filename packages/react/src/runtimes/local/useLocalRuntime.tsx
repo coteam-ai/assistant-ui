@@ -1,20 +1,50 @@
 "use client";
 
-import { useInsertionEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChatModelAdapter } from "./ChatModelAdapter";
-import { LocalRuntime } from "./LocalRuntime";
+import { LocalRuntimeCore } from "./LocalRuntimeCore";
 import { LocalRuntimeOptions } from "./LocalRuntimeOptions";
+import {
+  AssistantRuntime,
+  AssistantRuntimeImpl,
+} from "../../api/AssistantRuntime";
+import { ThreadRuntimeImpl } from "../../internal";
+
+export type LocalRuntime = AssistantRuntime & {
+  reset: (options?: Parameters<LocalRuntimeCore["reset"]>[0]) => void;
+};
+
+class LocalRuntimeImpl extends AssistantRuntimeImpl implements LocalRuntime {
+  private constructor(private core: LocalRuntimeCore) {
+    super(core, ThreadRuntimeImpl);
+  }
+
+  public reset(options?: Parameters<LocalRuntimeCore["reset"]>[0]) {
+    this.core.reset(options);
+  }
+
+  public static override create(_core: LocalRuntimeCore): LocalRuntime {
+    return new LocalRuntimeImpl(_core);
+  }
+}
 
 export const useLocalRuntime = (
   adapter: ChatModelAdapter,
-  options: LocalRuntimeOptions = {},
+  { initialMessages, ...options }: LocalRuntimeOptions = {},
 ) => {
-  const [runtime] = useState(() => new LocalRuntime(adapter, options));
+  const opt = {
+    ...options,
+    adapters: {
+      ...options.adapters,
+      chatModel: adapter,
+    },
+  };
 
-  useInsertionEffect(() => {
-    runtime.adapter = adapter;
-    runtime.options = options;
-  });
+  const [runtime] = useState(() => new LocalRuntimeCore(opt, initialMessages));
 
-  return runtime;
+  useEffect(() => {
+    runtime.threadList.getMainThreadRuntimeCore().__internal_setOptions(opt);
+  }, [runtime, opt]);
+
+  return useMemo(() => LocalRuntimeImpl.create(runtime), [runtime]);
 };
