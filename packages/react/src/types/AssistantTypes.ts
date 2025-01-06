@@ -186,16 +186,19 @@ export type CoreAssistantContentPart =
 export type CoreSystemMessage = {
   role: "system";
   content: readonly [TextContentPart];
+  id?: string | undefined;
 };
 
 export type CoreUserMessage = {
   role: "user";
   content: readonly CoreUserContentPart[];
+  id?: string | undefined;
 };
 
 export type CoreAssistantMessage = {
   role: "assistant";
   content: readonly CoreAssistantContentPart[];
+  id?: string | undefined;
 };
 
 export type CoreMessage =

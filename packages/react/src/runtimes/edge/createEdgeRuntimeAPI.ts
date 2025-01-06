@@ -41,6 +41,7 @@ export type CreateEdgeRuntimeAPIOptions = LanguageModelV1CallSettings & {
   system?: string;
   tools?: Record<string, Tool<any, any>>;
   toolChoice?: LanguageModelV1ToolChoice;
+  onNew?: (messages: CoreMessage[]) => void;
   onFinish?: (result: FinishResult) => void;
 };
 
@@ -66,6 +67,7 @@ export const getEdgeRuntimeStream = async ({
     system: serverSystem,
     tools: serverTools = {},
     toolChoice,
+    onNew,
     onFinish,
     ...unsafeSettings
   },
@@ -102,6 +104,10 @@ export const getEdgeRuntimeStream = async ({
       ? await modelOrCreator({ apiKey, baseUrl, modelName })
       : modelOrCreator;
 
+  if (onNew) {
+    onNew(messages)
+  }
+    
   let stream: ReadableStream<ToolResultStreamPart>;
   const streamResult = await streamMessage({
     ...(settings as Partial<StreamMessageOptions>),
