@@ -3,14 +3,14 @@
   "root": true,
   "pages": [
     "getting-started",
-    "architecture",
+    "guides",
+    "concepts",
+    "migrations",
+    "components",
+    "reference",
     "---UI---",
     "...ui",
     "---Runtimes---",
-    "...runtimes",
-    "---Advanced---",
-    "...advanced",
-    "migrations",
-    "reference"
+    "...runtimes"
   ]
 }

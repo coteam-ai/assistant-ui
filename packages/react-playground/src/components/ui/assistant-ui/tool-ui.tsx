@@ -30,7 +30,7 @@ export const ToolUI: ToolCallContentPartComponent = ({ toolName }) => {
 };
 
 const useContentPartTool = () => {
-  const part = useContentPart((c) => c.part);
+  const part = useContentPart();
   return part as ToolCallContentPart;
 };
 
@@ -45,8 +45,8 @@ const ToolArgumentsEditor: FC = () => {
 
   const handleValueChange = (value: string) => {
     setValue(value);
-    part.argsText = value;
-    part.args = tryJsonParse(value);
+    (part as any).argsText = value;
+    (part as any).args = tryJsonParse(value);
   };
 
   return (
@@ -76,7 +76,7 @@ const ToolResultEditor: FC = () => {
 
   const handleValueChange = (value: string) => {
     setValue(value);
-    part.result = value;
+    (part as any).result = value;
   };
 
   return (

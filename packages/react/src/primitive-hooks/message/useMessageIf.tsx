@@ -1,6 +1,6 @@
 "use client";
 import {
-  useMessageStore,
+  useMessageRuntime,
   useMessageUtilsStore,
 } from "../../context/react/MessageContext";
 import type { RequireAtLeastOne } from "../../utils/RequireAtLeastOne";
@@ -15,19 +15,28 @@ type MessageIfFilters = {
   lastOrHover: boolean | undefined;
   speaking: boolean | undefined;
   hasAttachments: boolean | undefined;
+  hasContent: boolean | undefined;
   submittedFeedback: "positive" | "negative" | null | undefined;
 };
 export type UseMessageIfProps = RequireAtLeastOne<MessageIfFilters>;
 
 export const useMessageIf = (props: UseMessageIfProps) => {
-  const messageStore = useMessageStore();
+  const messageRuntime = useMessageRuntime();
   const messageUtilsStore = useMessageUtilsStore();
 
   return useCombinedStore(
-    [messageStore, messageUtilsStore],
+    [messageRuntime, messageUtilsStore],
     (
-      { role, attachments, branchCount, isLast },
-      { isCopied, isHovering, isSpeaking, submittedFeedback },
+      {
+        role,
+        attachments,
+        content,
+        branchCount,
+        isLast,
+        speech,
+        submittedFeedback,
+      },
+      { isCopied, isHovering },
     ) => {
       if (props.hasBranches === true && branchCount < 2) return false;
 
@@ -40,8 +49,8 @@ export const useMessageIf = (props: UseMessageIfProps) => {
       if (props.copied === true && !isCopied) return false;
       if (props.copied === false && isCopied) return false;
 
-      if (props.speaking === true && !isSpeaking) return false;
-      if (props.speaking === false && isSpeaking) return false;
+      if (props.speaking === true && speech == null) return false;
+      if (props.speaking === false && speech != null) return false;
 
       if (
         props.hasAttachments === true &&
@@ -55,9 +64,12 @@ export const useMessageIf = (props: UseMessageIfProps) => {
       )
         return false;
 
+      if (props.hasContent === true && content.length === 0) return false;
+      if (props.hasContent === false && content.length > 0) return false;
+
       if (
         props.submittedFeedback !== undefined &&
-        submittedFeedback !== props.submittedFeedback
+        (submittedFeedback?.type ?? null) !== props.submittedFeedback
       )
         return false;
 

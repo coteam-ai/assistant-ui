@@ -11,24 +11,30 @@ export function assistantDecoderStream() {
     | { id: string; name: string; argsText: string }
     | undefined;
 
+  const endCurrentToolCall = (
+    controller: TransformStreamDefaultController<ToolResultStreamPart>,
+  ) => {
+    if (!currentToolCall) return;
+    controller.enqueue({
+      type: "tool-call",
+      toolCallType: "function",
+      toolCallId: currentToolCall.id,
+      toolName: currentToolCall.name,
+      args: currentToolCall.argsText,
+    });
+    currentToolCall = undefined;
+  };
+
   return new TransformStream<
     StreamPart<AssistantStreamChunk>,
     ToolResultStreamPart
   >({
     transform({ type, value }, controller) {
       if (
-        currentToolCall &&
-        type !== AssistantStreamChunkType.ToolCallArgsTextDelta &&
+        type !== AssistantStreamChunkType.ToolCallDelta &&
         type !== AssistantStreamChunkType.Error
       ) {
-        controller.enqueue({
-          type: "tool-call",
-          toolCallType: "function",
-          toolCallId: currentToolCall.id,
-          toolName: currentToolCall.name,
-          args: currentToolCall.argsText,
-        });
-        currentToolCall = undefined;
+        endCurrentToolCall(controller);
       }
 
       switch (type) {
@@ -40,20 +46,33 @@ export function assistantDecoderStream() {
           break;
         }
         case AssistantStreamChunkType.ToolCallBegin: {
-          const { id, name } = value;
+          const { toolCallId: id, toolName: name } = value;
           toolCallNames.set(id, name);
+
           currentToolCall = { id, name, argsText: "" };
-          break;
-        }
-        case AssistantStreamChunkType.ToolCallArgsTextDelta: {
-          const delta = value;
-          currentToolCall!.argsText += delta;
+
           controller.enqueue({
             type: "tool-call-delta",
             toolCallType: "function",
-            toolCallId: currentToolCall!.id,
-            toolName: currentToolCall!.name,
-            argsTextDelta: delta,
+            toolCallId: id,
+            toolName: name,
+            argsTextDelta: "",
+          });
+          break;
+        }
+        case AssistantStreamChunkType.ToolCallDelta: {
+          const { toolCallId, argsTextDelta } = value;
+
+          const toolName = toolCallNames.get(toolCallId)!;
+          if (currentToolCall?.id === toolCallId) {
+            currentToolCall.argsText += argsTextDelta;
+          }
+          controller.enqueue({
+            type: "tool-call-delta",
+            toolCallType: "function",
+            toolCallId,
+            toolName,
+            argsTextDelta: argsTextDelta,
           });
           break;
         }
@@ -61,8 +80,8 @@ export function assistantDecoderStream() {
           controller.enqueue({
             type: "tool-result",
             toolCallType: "function",
-            toolCallId: value.id,
-            toolName: toolCallNames.get(value.id)!,
+            toolCallId: value.toolCallId,
+            toolName: toolCallNames.get(value.toolCallId)!,
             result: value.result,
           });
           break;
@@ -81,11 +100,56 @@ export function assistantDecoderStream() {
           });
           break;
         }
+
+        case AssistantStreamChunkType.ToolCall: {
+          const { toolCallId, toolName, args } = value;
+          toolCallNames.set(toolCallId, toolName);
+
+          const argsText = JSON.stringify(args);
+          controller.enqueue({
+            type: "tool-call-delta",
+            toolCallType: "function",
+            toolCallId,
+            toolName,
+            argsTextDelta: argsText,
+          });
+          controller.enqueue({
+            type: "tool-call",
+            toolCallType: "function",
+            toolCallId: toolCallId,
+            toolName: toolName,
+            args: argsText,
+          });
+          break;
+        }
+
+        case AssistantStreamChunkType.StepFinish: {
+          controller.enqueue({
+            type: "step-finish",
+            ...value,
+          });
+          break;
+        }
+
+        case AssistantStreamChunkType.Data:
+          controller.enqueue({
+            type: "data",
+            data: value,
+          });
+          break;
+
+        // TODO
+        case AssistantStreamChunkType.Annotation:
+          break;
+
         default: {
           const unhandledType: never = type;
           throw new Error(`Unhandled chunk type: ${unhandledType}`);
         }
       }
+    },
+    flush(controller) {
+      endCurrentToolCall(controller);
     },
   });
 }

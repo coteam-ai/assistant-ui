@@ -12,36 +12,30 @@ export {
 
 export { default as AssistantActionBar } from "./assistant-action-bar";
 
-export {
-  default as AssistantMessage,
-  type AssistantMessageContentProps,
-} from "./assistant-message";
+export { default as AssistantMessage } from "./assistant-message";
 
 export { default as AssistantModal } from "./assistant-modal";
 
 export { default as BranchPicker } from "./branch-picker";
 
-export { default as Composer, type ComposerInputProps } from "./composer";
+export { default as Composer } from "./composer";
 
-export { default as ComposerAttachment } from "./composer-attachment";
+export { default as ContentPart } from "./content-part";
+
+export {
+  default as AttachmentUI, // TODO name collision with Attachment
+} from "./attachment-ui";
 
 export { default as EditComposer } from "./edit-composer";
 
-export { default as Thread, type ThreadRootProps } from "./thread";
+export { default as Thread } from "./thread";
 
-export {
-  default as UserMessage,
-  type UserMessageContentProps,
-} from "./user-message";
+export { default as ThreadList } from "./thread-list";
+
+export { default as ThreadListItem } from "./thread-list-item";
+
+export { default as ThreadWelcome } from "./thread-welcome";
+
+export { default as UserMessage } from "./user-message";
 
 export { default as UserActionBar } from "./user-action-bar";
-
-export { default as UserMessageAttachment } from "./user-message-attachment";
-
-export {
-  default as ThreadWelcome,
-  type ThreadWelcomeMessageProps,
-  type ThreadWelcomeSuggestionProps,
-} from "./thread-welcome";
-
-export { default as ContentPart } from "./content-part";

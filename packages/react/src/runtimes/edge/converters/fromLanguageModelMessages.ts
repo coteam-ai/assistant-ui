@@ -1,13 +1,14 @@
 import { LanguageModelV1Message } from "@ai-sdk/provider";
 import { CoreMessage, ToolCallContentPart } from "../../../types";
+import { Writable } from "stream";
 
 type fromLanguageModelMessagesOptions = {
-  mergeRoundtrips: boolean;
+  mergeSteps: boolean;
 };
 
 export const fromLanguageModelMessages = (
   lm: LanguageModelV1Message[],
-  { mergeRoundtrips }: fromLanguageModelMessagesOptions,
+  { mergeSteps }: fromLanguageModelMessagesOptions,
 ): CoreMessage[] => {
   const messages: CoreMessage[] = [];
 
@@ -74,10 +75,13 @@ export const fromLanguageModelMessages = (
           return part;
         });
 
-        if (mergeRoundtrips) {
+        if (mergeSteps) {
           const previousMessage = messages[messages.length - 1];
           if (previousMessage?.role === "assistant") {
-            previousMessage.content.push(...newContent);
+            previousMessage.content = [
+              ...previousMessage.content,
+              ...newContent,
+            ];
             break;
           }
         }
@@ -105,9 +109,11 @@ export const fromLanguageModelMessages = (
           if (toolCall.toolName !== tool.toolName)
             throw new Error("Tool call name mismatch.");
 
-          toolCall.result = tool.result;
+          type Writable<T> = { -readonly [P in keyof T]: T[P] };
+          const writable = toolCall as Writable<ToolCallContentPart>;
+          writable.result = tool.result;
           if (tool.isError) {
-            toolCall.isError = true;
+            writable.isError = true;
           }
         }
 

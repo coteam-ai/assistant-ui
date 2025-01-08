@@ -4,22 +4,20 @@ import { ComponentPropsWithoutRef, ElementRef, forwardRef } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { ScopedProps, usePopoverScope } from "./scope";
 
-type AssistantModalPrimitiveTriggerElement = ElementRef<
-  typeof PopoverPrimitive.Trigger
->;
-export type AssistantModalPrimitiveTriggerProps = ComponentPropsWithoutRef<
-  typeof PopoverPrimitive.Trigger
->;
+export namespace AssistantModalPrimitiveTrigger {
+  export type Element = ElementRef<typeof PopoverPrimitive.Trigger>;
+  export type Props = ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>;
+}
 
 export const AssistantModalPrimitiveTrigger = forwardRef<
-  AssistantModalPrimitiveTriggerElement,
-  AssistantModalPrimitiveTriggerProps
+  AssistantModalPrimitiveTrigger.Element,
+  AssistantModalPrimitiveTrigger.Props
 >(
   (
     {
       __scopeAssistantModal,
       ...rest
-    }: ScopedProps<AssistantModalPrimitiveTriggerProps>,
+    }: ScopedProps<AssistantModalPrimitiveTrigger.Props>,
     ref,
   ) => {
     const scope = usePopoverScope(__scopeAssistantModal);

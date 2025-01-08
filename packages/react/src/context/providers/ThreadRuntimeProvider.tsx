@@ -6,9 +6,12 @@ import { makeThreadViewportStore } from "../stores/ThreadViewport";
 import { writableStore } from "../ReadonlyStore";
 import { ThreadRuntime } from "../../api/ThreadRuntime";
 import { create } from "zustand";
-import { ThreadComposerRuntime } from "../../api";
+import { ThreadComposerRuntime } from "../../api/ComposerRuntime";
+import { ThreadListItemRuntime } from "../../api/ThreadListItemRuntime";
+import { ThreadListItemRuntimeProvider } from "./ThreadListItemRuntimeProvider";
 
 type ThreadProviderProps = {
+  listItemRuntime: ThreadListItemRuntime;
   runtime: ThreadRuntime;
 };
 
@@ -34,19 +37,6 @@ const useThreadStore = (runtime: ThreadRuntime) => {
   return store;
 };
 
-const useThreadMessagesStore = (runtime: ThreadRuntime) => {
-  const [store] = useState(() => create(() => runtime.messages));
-
-  useEffect(() => {
-    const updateState = () =>
-      writableStore(store).setState(runtime.messages, true);
-    updateState();
-    return runtime.subscribe(updateState);
-  }, [runtime, store]);
-
-  return store;
-};
-
 const useThreadComposerStore = (runtime: ThreadComposerRuntime) => {
   const [store] = useState(() => create(() => runtime.getState()));
 
@@ -62,10 +52,9 @@ const useThreadComposerStore = (runtime: ThreadComposerRuntime) => {
 
 export const ThreadRuntimeProvider: FC<
   PropsWithChildren<ThreadProviderProps>
-> = ({ children, runtime }) => {
+> = ({ children, listItemRuntime: threadListItemRuntime, runtime }) => {
   const useThreadRuntime = useThreadRuntimeStore(runtime);
   const useThread = useThreadStore(runtime);
-  const useThreadMessages = useThreadMessagesStore(runtime);
   const useThreadComposer = useThreadComposerStore(runtime.composer);
 
   const context = useMemo<ThreadContextValue>(() => {
@@ -74,14 +63,16 @@ export const ThreadRuntimeProvider: FC<
     return {
       useThread,
       useThreadRuntime,
-      useThreadMessages,
-      useThreadActions: useThreadRuntime,
       useComposer: useThreadComposer,
       useViewport,
     };
-  }, [useThread, useThreadRuntime, useThreadMessages, useThreadComposer]);
+  }, [useThread, useThreadRuntime, useThreadComposer]);
 
   return (
-    <ThreadContext.Provider value={context}>{children}</ThreadContext.Provider>
+    <ThreadListItemRuntimeProvider runtime={threadListItemRuntime}>
+      <ThreadContext.Provider value={context}>
+        {children}
+      </ThreadContext.Provider>
+    </ThreadListItemRuntimeProvider>
   );
 };

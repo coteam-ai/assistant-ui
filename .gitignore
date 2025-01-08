@@ -33,9 +33,14 @@ out/
 # production
 build
 dist
-apps/docs/public/registry/
+apps/docs/generated
+packages/*/generated
 
 # turbo
 .turbo
 
+# env files
+.env
 
+# python
+__pycache__

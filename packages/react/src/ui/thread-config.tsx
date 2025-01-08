@@ -11,13 +11,17 @@ import {
 
 import { AssistantRuntime } from "../api/AssistantRuntime";
 import { AvatarProps } from "./base/avatar";
-import { TextContentPartComponent, ToolCallContentPartProps } from "../types";
+import {
+  EmptyContentPartComponent,
+  TextContentPartComponent,
+  ToolCallContentPartProps,
+} from "../types";
 import { AssistantRuntimeProvider } from "../context";
 import { AssistantToolUI } from "../model-config";
 import { useAssistantRuntime } from "../context/react/AssistantContext";
 
 export type SuggestionConfig = {
-  text?: ReactNode;
+  text?: ReactNode | undefined;
   prompt: string;
 };
 
@@ -39,6 +43,7 @@ export type AssistantMessageConfig = {
   components?:
     | {
         Text?: TextContentPartComponent | undefined;
+        Empty?: EmptyContentPartComponent | undefined;
         ToolFallback?: ComponentType<ToolCallContentPartProps> | undefined;
       }
     | undefined;
@@ -65,10 +70,26 @@ export type StringsConfig = {
       };
     };
   };
+  threadList?: {
+    new?: {
+      label?: string | undefined;
+    };
+    item?: {
+      title?: {
+        fallback?: string | undefined;
+      };
+      archive?: {
+        tooltip?: string | undefined;
+      };
+    };
+  };
   thread?: {
     scrollToBottom?: {
       tooltip?: string | undefined;
     };
+  };
+  welcome?: {
+    message?: string | undefined;
   };
   userMessage?: {
     edit?: {
@@ -148,21 +169,31 @@ export type StringsConfig = {
 const ThreadConfigContext = createContext<ThreadConfig>({});
 
 export type ThreadConfig = {
-  runtime?: AssistantRuntime;
+  runtime?: AssistantRuntime | undefined;
 
-  assistantAvatar?: AvatarProps;
+  assistantAvatar?: AvatarProps | undefined;
 
-  welcome?: ThreadWelcomeConfig;
-  assistantMessage?: AssistantMessageConfig;
-  userMessage?: UserMessageConfig;
+  welcome?: ThreadWelcomeConfig | undefined;
+  assistantMessage?: AssistantMessageConfig | undefined;
+  userMessage?: UserMessageConfig | undefined;
 
-  branchPicker?: BranchPickerConfig;
+  branchPicker?: BranchPickerConfig | undefined;
 
-  composer?: ComposerConfig;
+  composer?: ComposerConfig | undefined;
 
-  strings?: StringsConfig;
+  strings?: StringsConfig | undefined;
 
-  tools?: AssistantToolUI[]; // TODO add AssistantTool support
+  tools?: AssistantToolUI[] | undefined; // TODO add AssistantTool support
+
+  components?:
+    | {
+        UserMessage?: ComponentType | undefined;
+        AssistantMessage?: ComponentType | undefined;
+        EditComposer?: ComponentType | undefined;
+        Composer?: ComponentType | undefined;
+        ThreadWelcome?: ComponentType | undefined;
+      }
+    | undefined;
 };
 
 export const useThreadConfig = (): Omit<ThreadConfig, "runtime"> => {
@@ -179,14 +210,23 @@ export const ThreadConfigProvider: FC<ThreadConfigProviderProps> = ({
 }) => {
   const hasAssistant = !!useAssistantRuntime({ optional: true });
 
-  const configProvider =
-    config && Object.keys(config ?? {}).length > 0 ? (
-      <ThreadConfigContext.Provider value={config}>
-        {children}
-      </ThreadConfigContext.Provider>
-    ) : (
-      <>{children}</>
+  const hasConfig = config && Object.keys(config).length > 0;
+  const outerConfig = useThreadConfig();
+
+  if (hasConfig && Object.keys(outerConfig).length > 0) {
+    throw new Error(
+      "You are providing ThreadConfig to several nested components. Please provide all configuration to the same component.",
     );
+  }
+
+  const configProvider = hasConfig ? (
+    <ThreadConfigContext.Provider value={config}>
+      {children}
+    </ThreadConfigContext.Provider>
+  ) : (
+    <>{children}</>
+  );
+
   if (!config?.runtime) return configProvider;
 
   if (hasAssistant) {

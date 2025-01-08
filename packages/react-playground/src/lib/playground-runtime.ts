@@ -22,10 +22,13 @@ import {
   fromCoreMessage,
   INTERNAL,
   ThreadSuggestion,
+  ThreadRuntime,
+  AssistantRuntime,
 } from "@assistant-ui/react";
 import { LanguageModelV1FunctionTool } from "@ai-sdk/provider";
 import { useMemo, useState } from "react";
 import { create } from "zustand";
+import { StartRunConfig } from "@assistant-ui/react/runtimes/core/ThreadRuntimeCore";
 
 const {
   BaseAssistantRuntimeCore,
@@ -47,36 +50,106 @@ const makeModelConfigStore = () =>
     config: {},
   }));
 
-class PlaygroundRuntimeCore extends BaseAssistantRuntimeCore<PlaygroundThreadRuntimeCore> {
-  private readonly _proxyConfigProvider: InstanceType<
-    typeof ProxyConfigProvider
-  >;
+type PlaygroundThreadFactory = () => PlaygroundThreadRuntimeCore;
 
-  constructor(initialMessages: CoreMessage[], adapter: ChatModelAdapter) {
-    const cp = new ProxyConfigProvider();
-    super(
-      new PlaygroundThreadRuntimeCore(
-        cp,
+const EMPTY_ARRAY = [] as never[];
+const RESOLVED_PROMISE = Promise.resolve();
+
+class PlaygroundThreadListRuntimeCore
+  implements INTERNAL.ThreadListRuntimeCore
+{
+  private _mainThread: PlaygroundThreadRuntimeCore;
+
+  public get mainThreadId() {
+    return "default";
+  }
+
+  public get newThreadId() {
+    return undefined;
+  }
+
+  public get threadIds() {
+    return EMPTY_ARRAY;
+  }
+
+  public get archivedThreadIds() {
+    return EMPTY_ARRAY;
+  }
+
+  constructor(private threadFactory: PlaygroundThreadFactory) {
+    this._mainThread = this.threadFactory();
+  }
+
+  public getLoadThreadsPromise(): Promise<void> {
+    return RESOLVED_PROMISE;
+  }
+
+  public getMainThreadRuntimeCore() {
+    return this._mainThread;
+  }
+
+  public getItemById(id: string) {
+    if (id !== "default") return undefined;
+
+    return {
+      threadId: "default",
+      status: "regular",
+      runtime: this._mainThread,
+    } as const;
+  }
+
+  public switchToThread(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  public async switchToNewThread(): Promise<void> {
+    this._mainThread = this.threadFactory();
+    this.notifySubscribers();
+  }
+
+  public rename(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  public archive(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  public unarchive(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  public delete(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  private _subscriptions = new Set<() => void>();
+
+  private notifySubscribers() {
+    for (const callback of this._subscriptions) callback();
+  }
+
+  public subscribe(callback: () => void): Unsubscribe {
+    this._subscriptions.add(callback);
+    return () => this._subscriptions.delete(callback);
+  }
+}
+
+class PlaygroundRuntimeCore extends BaseAssistantRuntimeCore {
+  public readonly threadList;
+
+  constructor(
+    adapter: ChatModelAdapter,
+    initialMessages: readonly CoreMessage[],
+  ) {
+    super();
+
+    this.threadList = new PlaygroundThreadListRuntimeCore(() => {
+      const thread = new PlaygroundThreadRuntimeCore(
+        this._proxyConfigProvider,
         fromCoreMessages(initialMessages),
         adapter,
-      ),
-    );
-    this._proxyConfigProvider = cp;
-  }
-
-  public switchToNewThread() {
-    this.thread = new PlaygroundThreadRuntimeCore(
-      this._proxyConfigProvider,
-      [],
-      this.thread.adapter,
-    );
-  }
-
-  public switchToThread(threadId: string | null) {
-    if (threadId !== null)
-      throw new Error("PlaygroundRuntime does not support switching threads");
-
-    this.switchToNewThread();
+      );
+      initialMessages = [];
+      return thread;
+    });
   }
 
   public override registerModelConfigProvider(
@@ -92,7 +165,7 @@ const CAPABILITIES = Object.freeze({
   reload: false,
   cancel: true,
   unstable_copy: true,
-  speak: false,
+  speech: false,
   attachments: false,
   feedback: false,
 });
@@ -100,17 +173,22 @@ const CAPABILITIES = Object.freeze({
 const EMPTY_BRANCHES: readonly string[] = Object.freeze([]);
 
 export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
+  public get metadata() {
+    return { isMain: true, threadId: "default", state: "regular" } as const;
+  }
+
   private _subscriptions = new Set<() => void>();
 
   private abortController: AbortController | null = null;
 
   public tools: Record<string, Tool<any, any>> = {};
 
-  public readonly threadId = generateId();
   public readonly isDisabled = false;
   public readonly capabilities = CAPABILITIES;
   public readonly extras = undefined;
   public readonly suggestions: readonly ThreadSuggestion[] = [];
+  public readonly speech = undefined;
+  public readonly adapters = undefined;
 
   private configProvider = new ProxyConfigProvider();
 
@@ -192,12 +270,17 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
     this.setMessages([...this.messages, fromCoreMessage(message)]);
   }
 
-  public async startRun(): Promise<void> {
+  public async startRun({ runConfig }: StartRunConfig): Promise<void> {
     let message: ThreadAssistantMessage = {
       id: generateId(),
       role: "assistant",
       status: { type: "running" },
       content: [],
+      metadata: {
+        unstable_data: [],
+        steps: [],
+        custom: {},
+      },
       createdAt: new Date(),
     };
 
@@ -210,7 +293,14 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
     const updateMessage = (m: Partial<ChatModelRunResult>) => {
       message = {
         ...message,
-        ...m,
+        content: m.content ?? message.content,
+        status: m.status ?? message.status,
+        metadata: {
+          unstable_data:
+            m.metadata?.unstable_data ?? message.metadata?.unstable_data,
+          steps: m.metadata?.steps ?? message.metadata?.steps,
+          custom: m.metadata?.custom ?? message.metadata?.custom,
+        },
       };
       this.setMessages([...this.messages.slice(0, -1), message]);
     };
@@ -218,9 +308,9 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
     try {
       const promiseOrGenerator = this.adapter.run({
         messages,
+        runConfig: runConfig ?? {},
         abortSignal: this.abortController.signal,
         config: this.configProvider.getModelConfig(),
-        onUpdate: updateMessage,
       });
 
       if (Symbol.asyncIterator in promiseOrGenerator) {
@@ -276,8 +366,21 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
     throw new Error("PlaygroundRuntime does not support speaking.");
   }
 
+  public stopSpeaking(): never {
+    throw new Error("PlaygroundRuntime does not support speaking.");
+  }
+
+  public getSubmittedFeedback() {
+    return undefined;
+  }
+
   public submitFeedback(): never {
     throw new Error("PlaygroundRuntime does not support feedback.");
+  }
+
+  public unstable_on() {
+    // events not supported in playground
+    return () => {};
   }
 
   public deleteMessage(messageId: string) {
@@ -459,6 +562,11 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
           return {
             ...m,
             role,
+            ...(role === "assistant"
+              ? {
+                  status: m.status ?? { type: "complete", reason: "unknown" },
+                }
+              : undefined),
             content: m.content
               .filter((part) => {
                 const assistantAllowed =
@@ -505,37 +613,111 @@ export class PlaygroundThreadRuntimeCore implements INTERNAL.ThreadRuntimeCore {
   public export(): never {
     throw new Error("Playground does not support exporting messages.");
   }
+
+  public getMessageById(messageId: string) {
+    const idx = this.messages.findIndex((m) => m.id === messageId);
+    if (idx === -1) return undefined;
+    return {
+      message: this.messages[idx]!,
+      parentId: this.messages[idx - 1]?.id ?? null,
+    };
+  }
 }
 
-class PlaygroundThreadRuntime extends ThreadRuntimeImpl {
-  constructor(private binding: INTERNAL.ThreadRuntimeCoreBinding) {
-    super(binding);
+export type PlaygroundThreadRuntime = ThreadRuntime & {
+  useModelConfig: PlaygroundThreadRuntimeCore["useModelConfig"];
+  addImage: PlaygroundThreadRuntimeCore["addImage"];
+  addTool: PlaygroundThreadRuntimeCore["addTool"];
+  deleteMessage: PlaygroundThreadRuntimeCore["deleteMessage"];
+  setRole: PlaygroundThreadRuntimeCore["setRole"];
+  setRequestData: (options: EdgeRuntimeRequestOptions) => void;
+  setMessageText: PlaygroundThreadRuntimeCore["setMessageText"];
+  deleteContentPart: PlaygroundThreadRuntimeCore["deleteContentPart"];
+};
+
+class PlaygroundThreadRuntimeImpl
+  extends ThreadRuntimeImpl
+  implements PlaygroundThreadRuntime
+{
+  constructor(
+    private binding: INTERNAL.ThreadRuntimeCoreBinding,
+    threadListItemBinding: INTERNAL.ThreadListItemRuntimeBinding,
+  ) {
+    super(binding, threadListItemBinding);
+  }
+
+  private _getState() {
+    return this.binding.getState() as PlaygroundThreadRuntimeCore;
   }
 
   public setRequestData(options: EdgeRuntimeRequestOptions) {
-    return (
-      this.binding.getState() as PlaygroundThreadRuntimeCore
-    ).setRequestData(options);
+    return this._getState().setRequestData(options);
+  }
+
+  public addImage(options: { image: string; messageId: string }) {
+    return this._getState().addImage(options);
+  }
+
+  public deleteMessage(messageId: string) {
+    return this._getState().deleteMessage(messageId);
+  }
+
+  public setRole(options: {
+    messageId: string;
+    role: "user" | "assistant" | "system";
+  }) {
+    return this._getState().setRole(options);
+  }
+
+  public addTool(options: { messageId: string; toolName: string }) {
+    return this._getState().addTool(options);
+  }
+
+  public setMessageText(options: {
+    messageId: string;
+    contentPart: TextContentPart;
+    text: string;
+  }) {
+    return this._getState().setMessageText(options);
+  }
+
+  public deleteContentPart(messageId: string, part: ThreadUserContentPart) {
+    return this._getState().deleteContentPart(messageId, part);
+  }
+
+  public get useModelConfig() {
+    return this._getState().useModelConfig;
+  }
+}
+
+export type PlaygroundRuntime = AssistantRuntime & {
+  thread: PlaygroundThreadRuntime;
+};
+
+class PlaygroundRuntimeImpl
+  extends AssistantRuntimeImpl
+  implements PlaygroundRuntime
+{
+  public override get thread() {
+    return super.thread as PlaygroundThreadRuntime;
+  }
+
+  public static override create(_core: PlaygroundRuntimeCore) {
+    return new PlaygroundRuntimeImpl(
+      _core,
+      PlaygroundThreadRuntimeImpl,
+    ) as PlaygroundRuntime;
   }
 }
 
 export const usePlaygroundRuntime = ({
-  initialMessages,
-  maxToolRoundtrips,
-  ...runtimeOptions
-}: EdgeRuntimeOptions & {
-  initialMessages: CoreMessage[];
-}) => {
+  initialMessages = [],
+  ...options
+}: EdgeRuntimeOptions) => {
   const [runtime] = useState(
     () =>
-      new PlaygroundRuntimeCore(
-        initialMessages,
-        new EdgeChatAdapter(runtimeOptions),
-      ),
+      new PlaygroundRuntimeCore(new EdgeChatAdapter(options), initialMessages),
   );
 
-  return useMemo(
-    () => new AssistantRuntimeImpl(runtime, PlaygroundThreadRuntime),
-    [runtime],
-  );
+  return useMemo(() => PlaygroundRuntimeImpl.create(runtime), [runtime]);
 };

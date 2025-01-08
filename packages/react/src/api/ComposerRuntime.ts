@@ -1,6 +1,7 @@
 import { Attachment, PendingAttachment } from "../types/AttachmentTypes";
 import {
   ComposerRuntimeCore,
+  ComposerRuntimeEventType,
   ThreadComposerRuntimeCore,
 } from "../runtimes/core/ComposerRuntimeCore";
 import { Unsubscribe } from "../types";
@@ -14,120 +15,51 @@ import {
 } from "./AttachmentRuntime";
 import { ShallowMemoizeSubject } from "./subscribable/ShallowMemoizeSubject";
 import { SKIP_UPDATE } from "./subscribable/SKIP_UPDATE";
+import { ComposerRuntimePath } from "./RuntimePathTypes";
+import { MessageRole, RunConfig } from "../types/AssistantTypes";
 
 export type ThreadComposerRuntimeCoreBinding = SubscribableWithState<
-  ThreadComposerRuntimeCore | undefined
+  ThreadComposerRuntimeCore | undefined,
+  ComposerRuntimePath & { composerSource: "thread" }
+>;
+
+export type EditComposerRuntimeCoreBinding = SubscribableWithState<
+  ComposerRuntimeCore | undefined,
+  ComposerRuntimePath & { composerSource: "edit" }
 >;
 
 export type ComposerRuntimeCoreBinding = SubscribableWithState<
-  ComposerRuntimeCore | undefined
+  ComposerRuntimeCore | undefined,
+  ComposerRuntimePath
 >;
 
-type LegacyEditComposerState = Readonly<{
-  type: "edit";
-
-  /** @deprecated Use `text` instead. This will be removed in 0.6.0. */
-  value: string;
-  /** @deprecated Use `useComposerRuntime().setText()` instead. This will be removed in 0.6.0. */
-  setValue: (value: string) => void;
-
-  text: string;
-  /**
-   * @deprecated Use `useComposerRuntime().setText()` instead. This will be removed in 0.6.0.
-   */
-  setText: (value: string) => void;
-
-  canCancel: boolean;
-  isEditing: boolean;
-  isEmpty: boolean;
-
-  /**
-   * @deprecated Use useComposerRuntime().beginEdit() instead. This will be removed in 0.6.0.
-   */
-  edit: () => void;
-  /**
-   * @deprecated Use `useComposerRuntime().send()` instead. This will be removed in 0.6.0.
-   */
-  send: () => void;
-  /**
-   * @deprecated Use `useComposerRuntime().cancel()` instead. This will be removed in 0.6.0.
-   */
-  cancel: () => void;
-}>;
-
-type LegacyThreadComposerState = Readonly<{
-  type: "thread";
-
-  /** @deprecated Use `text` instead. This will be removed in 0.6.0. */
-  value: string;
-  /** @deprecated Use `useComposerRuntime().setText` instead. This will be removed in 0.6.0. */
-  setValue: (value: string) => void;
-
-  attachmentAccept: string;
-  attachments: readonly Attachment[];
-
-  /** @deprecated Use `useComposerRuntime().addAttachment` instead. This will be removed in 0.6.0. */
-  addAttachment: (file: File) => Promise<void>;
-  /** @deprecated Use `useComposerRuntime().removeAttachment` instead. This will be removed in 0.6.0. */
-  removeAttachment: (attachmentId: string) => Promise<void>;
-
-  text: string;
-  /** @deprecated Use `useComposerRuntime().setText` instead. This will be removed in 0.6.0. */
-  setText: (value: string) => void;
-
-  /** @deprecated Use `useComposerRuntime().reset` instead. This will be removed in 0.6.0. */
-  reset: () => void;
-
-  canCancel: boolean;
-  isEditing: boolean;
-  isEmpty: boolean;
-
-  /**
-   * @deprecated Use `useComposerRuntime().send` instead. This will be removed in 0.6.0.
-   **/
-  send: () => void;
-  /** @deprecated Use `useComposerRuntime().cancel` instead. This will be removed in 0.6.0. */
-  cancel: () => void;
-
-  // TODO replace with events
-  /** @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it. */
-  focus: () => void;
-  /** @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it. */
-  onFocus: (listener: () => void) => Unsubscribe;
-}>;
-
 type BaseComposerState = {
-  text: string;
-  attachmentAccept: string;
-  attachments: readonly Attachment[];
+  readonly canCancel: boolean;
+  readonly isEditing: boolean;
+  readonly isEmpty: boolean;
 
-  canCancel: boolean;
-  isEditing: boolean;
-  isEmpty: boolean;
+  readonly text: string;
+  readonly role: MessageRole;
+  readonly attachments: readonly Attachment[];
+  readonly runConfig: RunConfig;
 };
 
-export type ThreadComposerState = LegacyThreadComposerState &
-  BaseComposerState & {
-    type: "thread";
+export type ThreadComposerState = BaseComposerState & {
+  readonly type: "thread";
 
-    attachments: readonly PendingAttachment[];
-  };
+  readonly attachments: readonly PendingAttachment[];
+};
 
-export type EditComposerState = LegacyEditComposerState &
-  BaseComposerState & {
-    type: "edit";
-  };
+export type EditComposerState = BaseComposerState & {
+  readonly type: "edit";
+};
 
 export type ComposerState = ThreadComposerState | EditComposerState;
 
-const METHOD_NOT_SUPPORTED = () => {
-  throw new Error("Composer is not available");
-};
 const EMPTY_ARRAY = Object.freeze([]);
+const EMPTY_OBJECT = Object.freeze({});
 const getThreadComposerState = (
   runtime: ThreadComposerRuntimeCore | undefined,
-  focus: () => void,
-  onFocus: (listener: () => void) => Unsubscribe,
 ): ThreadComposerState => {
   return Object.freeze({
     type: "thread",
@@ -135,29 +67,18 @@ const getThreadComposerState = (
     isEditing: runtime?.isEditing ?? false,
     canCancel: runtime?.canCancel ?? false,
     isEmpty: runtime?.isEmpty ?? true,
-    text: runtime?.text ?? "",
+
     attachments: runtime?.attachments ?? EMPTY_ARRAY,
-    attachmentAccept: runtime?.attachmentAccept ?? "*",
+    text: runtime?.text ?? "",
+    role: runtime?.role ?? "user",
+    runConfig: runtime?.runConfig ?? EMPTY_OBJECT,
 
     value: runtime?.text ?? "",
-    setValue: runtime?.setText.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    setText: runtime?.setText.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    // edit: beginEdit,
-    send: runtime?.send.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    cancel: runtime?.cancel.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    focus: focus,
-    onFocus: onFocus,
-    reset: runtime?.reset.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-
-    addAttachment: runtime?.addAttachment.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    removeAttachment:
-      runtime?.removeAttachment.bind(runtime) ?? METHOD_NOT_SUPPORTED,
   });
 };
 
 const getEditComposerState = (
   runtime: ComposerRuntimeCore | undefined,
-  beginEdit: () => void,
 ): EditComposerState => {
   return Object.freeze({
     type: "edit",
@@ -165,53 +86,30 @@ const getEditComposerState = (
     isEditing: runtime?.isEditing ?? false,
     canCancel: runtime?.canCancel ?? false,
     isEmpty: runtime?.isEmpty ?? true,
+
     text: runtime?.text ?? "",
+    role: runtime?.role ?? "user",
     attachments: runtime?.attachments ?? EMPTY_ARRAY,
-    attachmentAccept: runtime?.attachmentAccept ?? "*",
+    runConfig: runtime?.runConfig ?? EMPTY_OBJECT,
 
     value: runtime?.text ?? "",
-    setValue: runtime?.setText.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    setText: runtime?.setText.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    edit: beginEdit,
-    send: runtime?.send.bind(runtime) ?? METHOD_NOT_SUPPORTED,
-    cancel: runtime?.cancel.bind(runtime) ?? METHOD_NOT_SUPPORTED,
   });
 };
 
 export type ComposerRuntime = {
+  readonly path: ComposerRuntimePath;
   readonly type: "edit" | "thread";
   getState(): ComposerState;
 
-  /** @deprecated Use `getState().isEditing` instead. This will be removed in 0.6.0. */
-  readonly isEditing: boolean;
-
-  /** @deprecated Use `getState().isEmpty` instead. This will be removed in 0.6.0. */
-  readonly isEmpty: boolean;
-
-  /** @deprecated Use `getState().canCancel` instead. This will be removed in 0.6.0. */
-  readonly canCancel: boolean;
-
-  /** @deprecated Use `getState().text` instead. This will be removed in 0.6.0. */
-  readonly text: string;
-
-  /** @deprecated Use `getState().attachmentAccept` instead. This will be removed in 0.6.0. */
-  readonly attachmentAccept: string;
-
-  /** @deprecated Use `getState().attachments` instead. This will be removed in 0.6.0. */
-  readonly attachments: readonly Attachment[];
-
-  /** @deprecated Use `getState().text` instead. This will be removed in 0.6.0. */
-  readonly value: string;
-
-  setText(text: string): void;
-  setValue(text: string): void;
+  getAttachmentAccept(): string;
   addAttachment(file: File): Promise<void>;
 
-  /** @deprecated Use `getAttachmentById(id).removeAttachment()` instead. This will be removed in 0.6.0. */
-  removeAttachment(attachmentId: string): Promise<void>;
+  setText(text: string): void;
+  setRole(role: MessageRole): void;
+  setRunConfig(runConfig: RunConfig): void;
 
-  /** @deprecated This method will be removed in 0.6.0. Submit feedback if you need this functionality. */
-  reset(): void;
+  reset(): Promise<void>;
+  clearAttachments(): Promise<void>;
 
   send(): void;
   cancel(): void;
@@ -219,61 +117,14 @@ export type ComposerRuntime = {
   getAttachmentByIndex(idx: number): AttachmentRuntime;
 };
 
-export abstract class ComposerRuntimeImpl
-  implements ComposerRuntimeCore, ComposerRuntime
-{
+export abstract class ComposerRuntimeImpl implements ComposerRuntime {
+  public get path() {
+    return this._core.path;
+  }
+
   public abstract get type(): "edit" | "thread";
 
   constructor(protected _core: ComposerRuntimeCoreBinding) {}
-
-  /**
-   * @deprecated Use `getState().isEditing` instead. This will be removed in 0.6.0.
-   */
-  public get isEditing() {
-    return this.getState().isEditing;
-  }
-
-  /**
-   * @deprecated Use `getState().isEmpty` instead. This will be removed in 0.6.0.
-   */
-  public get isEmpty() {
-    return this.getState().isEmpty;
-  }
-
-  /**
-   * @deprecated Use `getState().canCancel` instead. This will be removed in 0.6.0.
-   */
-  public get canCancel() {
-    return this.getState().canCancel;
-  }
-
-  /**
-   * @deprecated Use `getState().text` instead. This will be removed in 0.6.0.
-   */
-  public get text() {
-    return this.getState().text;
-  }
-
-  /**
-   * @deprecated Use `getState().attachmentAccept` instead. This will be removed in 0.6.0.
-   */
-  public get attachmentAccept() {
-    return this.getState().attachmentAccept;
-  }
-
-  /**
-   * @deprecated Use `getState().attachments` instead. This will be removed in 0.6.0.
-   */
-  public get attachments() {
-    return this.getState().attachments;
-  }
-
-  /**
-   * @deprecated Use `getState().text` instead. This will be removed in 0.6.0.
-   */
-  public get value() {
-    return this.text;
-  }
 
   public abstract getState(): ComposerState;
 
@@ -283,8 +134,10 @@ export abstract class ComposerRuntimeImpl
     core.setText(text);
   }
 
-  public setValue(text: string) {
-    this.setText(text);
+  public setRunConfig(runConfig: RunConfig) {
+    const core = this._core.getState();
+    if (!core) throw new Error("Composer is not available");
+    core.setRunConfig(runConfig);
   }
 
   public addAttachment(file: File) {
@@ -293,22 +146,16 @@ export abstract class ComposerRuntimeImpl
     return core.addAttachment(file);
   }
 
-  /**
-   * @deprecated Use `getAttachmentById(id).removeAttachment()` instead. This will be removed in 0.6.0.
-   */
-  public removeAttachment(attachmentId: string) {
-    const core = this._core.getState();
-    if (!core) throw new Error("Composer is not available");
-    return core.removeAttachment(attachmentId);
-  }
-
-  /**
-   * @deprecated This method will be removed in 0.6.0. Submit feedback if you need this functionality.
-   */
   public reset() {
     const core = this._core.getState();
     if (!core) throw new Error("Composer is not available");
-    core.reset();
+    return core.reset();
+  }
+
+  public clearAttachments() {
+    const core = this._core.getState();
+    if (!core) throw new Error("Composer is not available");
+    return core.clearAttachments();
   }
 
   public send() {
@@ -323,8 +170,27 @@ export abstract class ComposerRuntimeImpl
     core.cancel();
   }
 
+  public setRole(role: MessageRole) {
+    const core = this._core.getState();
+    if (!core) throw new Error("Composer is not available");
+    core.setRole(role);
+  }
+
   public subscribe(callback: () => void) {
     return this._core.subscribe(callback);
+  }
+
+  public unstable_on(event: ComposerRuntimeEventType, callback: () => void) {
+    const core = this._core.getState();
+    if (!core) throw new Error("Composer is not available");
+
+    return core.unstable_on(event, callback);
+  }
+
+  public getAttachmentAccept(): string {
+    const core = this._core.getState();
+    if (!core) throw new Error("Composer is not available");
+    return core.getAttachmentAccept();
   }
 
   public abstract getAttachmentByIndex(idx: number): AttachmentRuntime;
@@ -334,19 +200,9 @@ export type ThreadComposerRuntime = Omit<
   ComposerRuntime,
   "getState" | "getAttachmentByIndex"
 > & {
+  readonly path: ComposerRuntimePath & { composerSource: "thread" };
   readonly type: "thread";
   getState(): ThreadComposerState;
-
-  /**
-   * @deprecated Use `getState().attachments` instead. This will be removed in 0.6.0.
-   */
-  attachments: readonly PendingAttachment[];
-
-  /** @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it. */
-  focus(): void;
-
-  /** @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it. */
-  onFocus(callback: () => void): Unsubscribe;
 
   getAttachmentByIndex(
     idx: number,
@@ -355,8 +211,14 @@ export type ThreadComposerRuntime = Omit<
 
 export class ThreadComposerRuntimeImpl
   extends ComposerRuntimeImpl
-  implements ThreadComposerRuntime, ThreadComposerState
+  implements ThreadComposerRuntime
 {
+  public override get path() {
+    return this._core.path as ComposerRuntimePath & {
+      composerSource: "thread";
+    };
+  }
+
   public get type() {
     return "thread" as const;
   }
@@ -365,50 +227,31 @@ export class ThreadComposerRuntimeImpl
 
   constructor(core: ThreadComposerRuntimeCoreBinding) {
     const stateBinding = new LazyMemoizeSubject({
-      getState: () =>
-        getThreadComposerState(
-          core.getState(),
-          this.focus.bind(this),
-          this.onFocus.bind(this),
-        ),
+      path: core.path,
+      getState: () => getThreadComposerState(core.getState()),
       subscribe: (callback) => core.subscribe(callback),
     });
     super({
+      path: core.path,
       getState: () => core.getState(),
       subscribe: (callback) => stateBinding.subscribe(callback),
     });
     this._getState = stateBinding.getState.bind(stateBinding);
   }
 
-  public override get attachments() {
-    return this.getState()?.attachments ?? EMPTY_ARRAY;
-  }
-
   public override getState(): ThreadComposerState {
     return this._getState();
-  }
-
-  // TODO replace with events
-  private _focusListeners = new Set<() => void>();
-
-  /**
-   * @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it.
-   */
-  public focus() {
-    this._focusListeners.forEach((callback) => callback());
-  }
-
-  /**
-   * @deprecated This feature is being removed in 0.6.0. Submit feedback if you need it.
-   */
-  public onFocus(callback: () => void) {
-    this._focusListeners.add(callback);
-    return () => this._focusListeners.delete(callback);
   }
 
   public getAttachmentByIndex(idx: number) {
     return new ThreadComposerAttachmentRuntimeImpl(
       new ShallowMemoizeSubject({
+        path: {
+          ...this.path,
+          attachmentSource: "thread-composer",
+          attachmentSelector: { type: "index", index: idx },
+          ref: this.path.ref + `${this.path.ref}.attachments[${idx}]`,
+        },
         getState: () => {
           const attachments = this.getState().attachments;
           const attachment = attachments[idx];
@@ -416,7 +259,6 @@ export class ThreadComposerRuntimeImpl
 
           return {
             ...attachment,
-            attachment: attachment,
             source: "thread-composer",
           } satisfies AttachmentState & { source: "thread-composer" };
         },
@@ -431,15 +273,11 @@ export type EditComposerRuntime = Omit<
   ComposerRuntime,
   "getState" | "getAttachmentByIndex"
 > & {
+  readonly path: ComposerRuntimePath & { composerSource: "edit" };
   readonly type: "edit";
 
   getState(): EditComposerState;
   beginEdit(): void;
-
-  /**
-   * @deprecated Use `beginEdit()` instead. This will be removed in 0.6.0.
-   */
-  edit(): void;
 
   getAttachmentByIndex(
     idx: number,
@@ -448,23 +286,29 @@ export type EditComposerRuntime = Omit<
 
 export class EditComposerRuntimeImpl
   extends ComposerRuntimeImpl
-  implements EditComposerRuntime, EditComposerState
+  implements EditComposerRuntime
 {
+  public override get path() {
+    return this._core.path as ComposerRuntimePath & { composerSource: "edit" };
+  }
+
   public get type() {
     return "edit" as const;
   }
 
   private _getState;
   constructor(
-    core: ComposerRuntimeCoreBinding,
+    core: EditComposerRuntimeCoreBinding,
     private _beginEdit: () => void,
   ) {
     const stateBinding = new LazyMemoizeSubject({
-      getState: () => getEditComposerState(core.getState(), this._beginEdit),
+      path: core.path,
+      getState: () => getEditComposerState(core.getState()),
       subscribe: (callback) => core.subscribe(callback),
     });
 
     super({
+      path: core.path,
       getState: () => core.getState(),
       subscribe: (callback) => stateBinding.subscribe(callback),
     });
@@ -480,16 +324,15 @@ export class EditComposerRuntimeImpl
     this._beginEdit();
   }
 
-  /**
-   * @deprecated Use `beginEdit()` instead. This will be removed in 0.6.0.
-   */
-  public edit() {
-    this.beginEdit();
-  }
-
   public getAttachmentByIndex(idx: number) {
     return new EditComposerAttachmentRuntimeImpl(
       new ShallowMemoizeSubject({
+        path: {
+          ...this.path,
+          attachmentSource: "edit-composer",
+          attachmentSelector: { type: "index", index: idx },
+          ref: this.path.ref + `${this.path.ref}.attachments[${idx}]`,
+        },
         getState: () => {
           const attachments = this.getState().attachments;
           const attachment = attachments[idx];
@@ -497,7 +340,6 @@ export class EditComposerRuntimeImpl
 
           return {
             ...attachment,
-            attachment: attachment,
             source: "edit-composer",
           } satisfies AttachmentState & { source: "edit-composer" };
         },

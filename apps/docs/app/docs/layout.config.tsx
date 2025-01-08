@@ -1,9 +1,14 @@
-import { type DocsLayoutProps } from "fumadocs-ui/layout";
 import { pageTree } from "@/app/source";
-import { BookIcon, LayoutTemplateIcon, NewspaperIcon } from "lucide-react";
+import {
+  BookIcon,
+  NewspaperIcon,
+  ProjectorIcon,
+  SparklesIcon,
+} from "lucide-react";
 import icon from "@/public/favicon/icon.svg";
 import Image from "next/image";
-import { HomeLayoutProps } from "fumadocs-ui/home-layout";
+import { DocsLayoutProps } from "fumadocs-ui/layouts/docs";
+import { HomeLayoutProps } from "fumadocs-ui/layouts/home";
 
 const DiscordIcon = () => {
   return (
@@ -22,7 +27,7 @@ const DiscordIcon = () => {
 
 // shared configuration
 export const baseOptions: HomeLayoutProps = {
-  githubUrl: "https://github.com/Yonom/assistant-ui",
+  githubUrl: "https://github.com/assistant-ui/assistant-ui",
   nav: {
     title: (
       <>
@@ -39,14 +44,19 @@ export const baseOptions: HomeLayoutProps = {
   links: [
     {
       text: "Documentation",
-      url: "/docs",
+      url: "/docs/getting-started",
       icon: <BookIcon />,
       active: "nested-url",
     },
     {
+      text: "Showcase",
+      url: "/showcase",
+      icon: <ProjectorIcon />,
+    },
+    {
       text: "Examples",
       url: "/examples",
-      icon: <LayoutTemplateIcon />,
+      icon: <SparklesIcon />,
     },
     {
       text: "Blog",

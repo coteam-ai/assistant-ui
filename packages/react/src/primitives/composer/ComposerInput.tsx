@@ -15,21 +15,28 @@ import TextareaAutosize, {
 } from "react-textarea-autosize";
 import {
   useComposer,
-  useComposerStore,
+  useComposerRuntime,
 } from "../../context/react/ComposerContext";
-import { useThread, useThreadStore } from "../../context/react/ThreadContext";
+import { useThread, useThreadRuntime } from "../../context/react/ThreadContext";
 import { useEscapeKeydown } from "@radix-ui/react-use-escape-keydown";
-import { useOnComposerFocus } from "../../utils/hooks/useOnComposerFocus";
+import { useOnScrollToBottom } from "../../utils/hooks/useOnScrollToBottom";
+import { useThreadListItemRuntime } from "../../context/react/ThreadListItemContext";
 
-export type ComposerPrimitiveInputProps = TextareaAutosizeProps & {
-  asChild?: boolean | undefined;
-  submitOnEnter?: boolean | undefined;
-  cancelOnEscape?: boolean | undefined;
-};
+export namespace ComposerPrimitiveInput {
+  export type Element = HTMLTextAreaElement;
+  export type Props = TextareaAutosizeProps & {
+    asChild?: boolean | undefined;
+    submitOnEnter?: boolean | undefined;
+    cancelOnEscape?: boolean | undefined;
+    unstable_focusOnRunStart?: boolean | undefined;
+    unstable_focusOnScrollToBottom?: boolean | undefined;
+    unstable_focusOnThreadSwitched?: boolean | undefined;
+  };
+}
 
 export const ComposerPrimitiveInput = forwardRef<
-  HTMLTextAreaElement,
-  ComposerPrimitiveInputProps
+  ComposerPrimitiveInput.Element,
+  ComposerPrimitiveInput.Props
 >(
   (
     {
@@ -40,12 +47,16 @@ export const ComposerPrimitiveInput = forwardRef<
       onKeyDown,
       submitOnEnter = true,
       cancelOnEscape = true,
+      unstable_focusOnRunStart = true,
+      unstable_focusOnScrollToBottom = true,
+      unstable_focusOnThreadSwitched = true,
       ...rest
     },
     forwardedRef,
   ) => {
-    const threadStore = useThreadStore();
-    const composerStore = useComposerStore();
+    const threadListItemRuntime = useThreadListItemRuntime();
+    const threadRuntime = useThreadRuntime();
+    const composerRuntime = useComposerRuntime();
 
     const value = useComposer((c) => {
       if (!c.isEditing) return "";
@@ -60,10 +71,9 @@ export const ComposerPrimitiveInput = forwardRef<
 
     useEscapeKeydown((e) => {
       if (!cancelOnEscape) return;
-      
-      const composer = composerStore.getState();
-      if (composer.canCancel) {
-        composer.cancel();
+
+      if (composerRuntime.getState().canCancel) {
+        composerRuntime.cancel();
         e.preventDefault();
       }
     });
@@ -75,7 +85,7 @@ export const ComposerPrimitiveInput = forwardRef<
       if (e.nativeEvent.isComposing) return;
 
       if (e.key === "Enter" && e.shiftKey === false) {
-        const { isRunning } = threadStore.getState();
+        const { isRunning } = threadRuntime.getState();
 
         if (!isRunning) {
           e.preventDefault();
@@ -92,18 +102,32 @@ export const ComposerPrimitiveInput = forwardRef<
 
       textarea.focus({ preventScroll: true });
       textarea.setSelectionRange(
-        textareaRef.current.value.length,
-        textareaRef.current.value.length,
+        textarea.value.length,
+        textarea.value.length,
       );
     }, [autoFocusEnabled]);
 
     useEffect(() => focus(), [focus]);
 
-    useOnComposerFocus(() => {
-      if (composerStore.getState().type === "thread") {
+    useOnScrollToBottom(() => {
+      if (composerRuntime.type === "thread" && unstable_focusOnScrollToBottom) {
         focus();
       }
     });
+
+    useEffect(() => {
+      if (composerRuntime.type !== "thread" || !unstable_focusOnRunStart)
+        return undefined;
+
+      return threadRuntime.unstable_on("run-start", focus);
+    }, [unstable_focusOnRunStart]);
+
+    useEffect(() => {
+      if (composerRuntime.type !== "thread" || !unstable_focusOnThreadSwitched)
+        return undefined;
+
+      return threadListItemRuntime.unstable_on("switched-to", focus);
+    }, [unstable_focusOnThreadSwitched]);
 
     return (
       <Component
@@ -113,9 +137,8 @@ export const ComposerPrimitiveInput = forwardRef<
         ref={ref}
         disabled={isDisabled}
         onChange={composeEventHandlers(onChange, (e) => {
-          const composerState = composerStore.getState();
-          if (!composerState.isEditing) return;
-          return composerState.setText(e.target.value);
+          if (!composerRuntime.getState().isEditing) return;
+          return composerRuntime.setText(e.target.value);
         })}
         onKeyDown={composeEventHandlers(onKeyDown, handleKeyPress)}
       />

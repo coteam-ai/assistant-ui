@@ -1,19 +1,18 @@
-import { ThreadRuntimeCore } from "./ThreadRuntimeCore";
+import { ComponentType } from "react";
 import type { ModelConfigProvider } from "../../types/ModelConfigTypes";
 import type { Unsubscribe } from "../../types/Unsubscribe";
+import { ThreadListRuntimeCore } from "./ThreadListRuntimeCore";
 
 export type AssistantRuntimeCore = {
-  readonly thread: ThreadRuntimeCore;
-
-  switchToNewThread: () => void;
-
-  switchToThread(threadId: string): void;
-  /**
-   * @deprecated Use `switchToNewThread` instead. This will be removed in 0.6.0.
-   */
-  switchToThread(threadId: string | null): void;
+  readonly threadList: ThreadListRuntimeCore;
 
   registerModelConfigProvider: (provider: ModelConfigProvider) => Unsubscribe;
 
-  subscribe: (callback: () => void) => Unsubscribe;
+  /**
+   * EXPERIMENTAL: A component that is rendered inside the AssistantRuntimeProvider.
+   *
+   * Note: This field is expected to never change.
+   * To update the component, use a zustand store.
+   */
+  readonly RenderComponent?: ComponentType | undefined;
 };

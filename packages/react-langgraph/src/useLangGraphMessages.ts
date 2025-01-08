@@ -1,28 +1,48 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { INTERNAL } from "@assistant-ui/react";
 
 const { generateId } = INTERNAL;
 
+export type LangGraphCommand = {
+  resume: string;
+};
+
+export type LangGraphSendMessageConfig = {
+  command?: LangGraphCommand;
+  runConfig?: unknown;
+};
+
+export type LangGraphStreamCallback<TMessage> = (
+  messages: TMessage[],
+  config: LangGraphSendMessageConfig & { abortSignal: AbortSignal },
+) => Promise<
+  AsyncGenerator<{
+    event: string;
+    data: any;
+  }>
+>;
+
 export const useLangGraphMessages = <TMessage>({
   stream,
 }: {
-  stream: (messages: TMessage[]) => Promise<
-    AsyncGenerator<{
-      event: string;
-      data: any;
-    }>
-  >;
+  stream: LangGraphStreamCallback<TMessage>;
 }) => {
   const [messages, setMessages] = useState<TMessage[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (newMessages: TMessage[]) => {
+    async (newMessages: TMessage[], config: LangGraphSendMessageConfig) => {
       const optimisticMessages = [...messages, ...newMessages];
       if (newMessages.length > 0) {
         setMessages(optimisticMessages);
       }
 
-      const response = await stream(newMessages);
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+      const response = await stream(newMessages, {
+        ...config,
+        abortSignal: abortController.signal,
+      });
 
       const completeMessages: TMessage[] = [];
       let partialMessages: Map<string, TMessage> = new Map();
@@ -62,8 +82,14 @@ export const useLangGraphMessages = <TMessage>({
       //   throw new Error("A partial message was not marked as complete");
       // }
     },
-    [stream],
+    [messages, stream],
   );
-  console.log("messages", messages);
-  return { messages, sendMessage, setMessages };
+
+  const cancel = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }, [abortControllerRef]);
+
+  return { messages, sendMessage, cancel, setMessages };
 };

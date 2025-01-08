@@ -1,71 +1,94 @@
 import { AssistantRuntimeCore } from "../runtimes/core/AssistantRuntimeCore";
 import { NestedSubscriptionSubject } from "./subscribable/NestedSubscriptionSubject";
 import { ModelConfigProvider } from "../types/ModelConfigTypes";
-import { ThreadRuntime, ThreadRuntimeCoreBinding } from "./ThreadRuntime";
+import {
+  ThreadListItemRuntimeBinding,
+  ThreadRuntime,
+  ThreadRuntimeCoreBinding,
+  ThreadRuntimeImpl,
+} from "./ThreadRuntime";
 import { Unsubscribe } from "../types";
+import { ThreadListRuntime, ThreadListRuntimeImpl } from "./ThreadListRuntime";
 
 export type AssistantRuntime = {
-  thread: ThreadRuntime;
+  /**
+   * The currently selected main thread.
+   */
+  readonly thread: ThreadRuntime;
 
+  /**
+   * The thread manager, to rename, archive and delete threads.
+   */
+  readonly threadList: ThreadListRuntime;
+
+  /**
+   * Switch to a new thread.
+   */
   switchToNewThread(): void;
 
+  /**
+   * Switch to a thread.
+   *
+   * @param threadId The thread ID to switch to.
+   */
   switchToThread(threadId: string): void;
-  /**
-   * @deprecated Use `switchToNewThread` instead. This will be removed in 0.6.0.
-   */
-  switchToThread(threadId: string | null): void;
 
+  /**
+   * Register a model config provider. Model config providers are configuration such as system message, temperature, etc. that are set in the frontend.
+   *
+   * @param provider The model config provider to register.
+   */
   registerModelConfigProvider(provider: ModelConfigProvider): Unsubscribe;
-
-  /**
-   * @deprecated Thread is now static and never gets updated. This will be removed in 0.6.0.
-   */
-  subscribe(callback: () => void): Unsubscribe;
 };
 
-export class AssistantRuntimeImpl<
-    TThreadRuntime extends ThreadRuntime = ThreadRuntime,
-  >
-  implements AssistantRuntimeCore, AssistantRuntime
-{
-  constructor(
-    private _core: AssistantRuntimeCore,
-    CustomThreadRuntime: new (
+export class AssistantRuntimeImpl implements AssistantRuntime {
+  public readonly threadList;
+  public readonly _thread: ThreadRuntime;
+
+  protected constructor(
+    private readonly _core: AssistantRuntimeCore,
+    runtimeFactory: new (
       binding: ThreadRuntimeCoreBinding,
-    ) => TThreadRuntime,
+      threadListItemBinding: ThreadListItemRuntimeBinding,
+    ) => ThreadRuntime = ThreadRuntimeImpl,
   ) {
-    this.thread = new CustomThreadRuntime(
+    this.threadList = new ThreadListRuntimeImpl(_core.threadList);
+    this._thread = new runtimeFactory(
       new NestedSubscriptionSubject({
-        getState: () => this._core.thread,
-        subscribe: (callback) => this._core.subscribe(callback),
+        path: {
+          ref: "threads.main",
+          threadSelector: { type: "main" },
+        },
+        getState: () => _core.threadList.getMainThreadRuntimeCore(),
+        subscribe: (callback) => _core.threadList.subscribe(callback),
       }),
+      this.threadList.mainItem, // TODO capture "main" threadListItem from context around useLocalRuntime / useExternalStoreRuntime
     );
   }
 
-  public readonly thread;
-
-  public switchToNewThread() {
-    return this._core.switchToNewThread();
+  public get thread() {
+    return this._thread;
   }
 
-  public switchToThread(threadId: string): void;
-  /**
-   * @deprecated Use `switchToNewThread` instead. This will be removed in 0.6.0.
-   */
-  public switchToThread(threadId: string | null): void;
-  public switchToThread(threadId: string | null) {
-    return this._core.switchToThread(threadId);
+  public switchToNewThread() {
+    return this._core.threadList.switchToNewThread();
+  }
+
+  public switchToThread(threadId: string) {
+    return this._core.threadList.switchToThread(threadId);
   }
 
   public registerModelConfigProvider(provider: ModelConfigProvider) {
     return this._core.registerModelConfigProvider(provider);
   }
 
-  // TODO events for thread switching
-  /**
-   * @deprecated Thread is now static and never gets updated. This will be removed in 0.6.0.
-   */
-  public subscribe(callback: () => void) {
-    return this._core.subscribe(callback);
+  public static create(
+    _core: AssistantRuntimeCore,
+    runtimeFactory: new (
+      binding: ThreadRuntimeCoreBinding,
+      threadListItemBinding: ThreadListItemRuntimeBinding,
+    ) => ThreadRuntime = ThreadRuntimeImpl,
+  ): AssistantRuntime {
+    return new AssistantRuntimeImpl(_core, runtimeFactory);
   }
 }

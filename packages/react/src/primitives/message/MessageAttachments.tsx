@@ -6,19 +6,21 @@ import { useMessageAttachment } from "../../context/react/AttachmentContext";
 import { AttachmentRuntimeProvider } from "../../context/providers/AttachmentRuntimeProvider";
 import { CompleteAttachment } from "../../types";
 
-export type MessagePrimitiveAttachmentsProps = {
-  components:
-    | {
-        Image?: ComponentType | undefined;
-        Document?: ComponentType | undefined;
-        File?: ComponentType | undefined;
-        Attachment?: ComponentType | undefined;
-      }
-    | undefined;
-};
+export namespace MessagePrimitiveAttachments {
+  export type Props = {
+    components:
+      | {
+          Image?: ComponentType | undefined;
+          Document?: ComponentType | undefined;
+          File?: ComponentType | undefined;
+          Attachment?: ComponentType | undefined;
+        }
+      | undefined;
+  };
+}
 
 const getComponent = (
-  components: MessagePrimitiveAttachmentsProps["components"],
+  components: MessagePrimitiveAttachments.Props["components"],
   attachment: CompleteAttachment,
 ) => {
   const type = attachment.type;
@@ -36,18 +38,16 @@ const getComponent = (
 };
 
 const AttachmentComponent: FC<{
-  components: MessagePrimitiveAttachmentsProps["components"];
+  components: MessagePrimitiveAttachments.Props["components"];
 }> = ({ components }) => {
-  const Component = useMessageAttachment((a) =>
-    getComponent(components, a.attachment),
-  );
+  const Component = useMessageAttachment((a) => getComponent(components, a));
 
   if (!Component) return null;
   return <Component />;
 };
 
 const MessageAttachmentImpl: FC<
-  MessagePrimitiveAttachmentsProps & { attachmentIndex: number }
+  MessagePrimitiveAttachments.Props & { attachmentIndex: number }
 > = ({ components, attachmentIndex }) => {
   const messageRuntime = useMessageRuntime();
   const runtime = useMemo(
@@ -73,9 +73,9 @@ const MessageAttachment = memo(
 );
 
 export const MessagePrimitiveAttachments: FC<
-  MessagePrimitiveAttachmentsProps
+  MessagePrimitiveAttachments.Props
 > = ({ components }) => {
-  const attachmentsCount = useMessage(({ message }) => {
+  const attachmentsCount = useMessage((message) => {
     if (message.role !== "user") return 0;
     return message.attachments.length;
   });

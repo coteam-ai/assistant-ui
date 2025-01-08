@@ -1,14 +1,10 @@
-import { AddToolResultOptions, ThreadSuggestion } from "../core";
 import {
-  ExportedMessageRepository,
-  MessageRepository,
-} from "../utils/MessageRepository";
-import {
-  AppendMessage,
-  ModelConfigProvider,
-  ThreadMessage,
-  Unsubscribe,
-} from "../../types";
+  AddToolResultOptions,
+  StartRunConfig,
+  ThreadSuggestion,
+} from "../core/ThreadRuntimeCore";
+
+import { AppendMessage, ModelConfigProvider, ThreadMessage } from "../../types";
 import { ExternalStoreAdapter } from "./ExternalStoreAdapter";
 import {
   getExternalStoreMessage,
@@ -18,14 +14,11 @@ import { ThreadMessageConverter } from "./ThreadMessageConverter";
 import { getAutoStatus, isAutoStatus } from "./auto-status";
 import { fromThreadMessageLike } from "./ThreadMessageLike";
 import { getThreadMessageText } from "../../utils/getThreadMessageText";
-import { generateId } from "../../internal";
-import { DefaultThreadComposerRuntimeCore } from "../composer/DefaultThreadComposerRuntimeCore";
 import {
   RuntimeCapabilities,
-  SubmitFeedbackOptions,
   ThreadRuntimeCore,
 } from "../core/ThreadRuntimeCore";
-import { DefaultEditComposerRuntimeCore } from "../composer/DefaultEditComposerRuntimeCore";
+import { BaseThreadRuntimeCore } from "../core/BaseThreadRuntimeCore";
 
 const EMPTY_ARRAY = Object.freeze([]);
 
@@ -36,9 +29,10 @@ export const hasUpcomingMessage = (
   return isRunning && messages[messages.length - 1]?.role !== "assistant";
 };
 
-export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
-  private _subscriptions = new Set<() => void>();
-  private repository = new MessageRepository();
+export class ExternalStoreThreadRuntimeCore
+  extends BaseThreadRuntimeCore
+  implements ThreadRuntimeCore
+{
   private assistantOptimisticId: string | null = null;
 
   private _capabilities: RuntimeCapabilities = {
@@ -47,7 +41,7 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
     reload: false,
     cancel: false,
     unstable_copy: false,
-    speak: false,
+    speech: false,
     attachments: false,
     feedback: false,
   };
@@ -56,9 +50,16 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
     return this._capabilities;
   }
 
-  public threadId!: string;
-  public messages!: ThreadMessage[];
+  private _messages!: ThreadMessage[];
   public isDisabled!: boolean;
+
+  public override get messages() {
+    return this._messages;
+  }
+
+  public get adapters() {
+    return this._store.adapters;
+  }
 
   public suggestions: readonly ThreadSuggestion[] = [];
   public extras: unknown = undefined;
@@ -67,41 +68,24 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
 
   private _store!: ExternalStoreAdapter<any>;
 
-  public readonly composer = new DefaultThreadComposerRuntimeCore(this);
-  private _editComposers = new Map<string, DefaultEditComposerRuntimeCore>();
-  public getEditComposer(messageId: string) {
-    return this._editComposers.get(messageId);
-  }
-  public beginEdit(messageId: string) {
-    if (this._editComposers.has(messageId))
-      throw new Error("Edit already in progress");
+  public override beginEdit(messageId: string) {
+    if (!this._store.onEdit)
+      throw new Error("Runtime does not support editing.");
 
-    this._editComposers.set(
-      messageId,
-      new DefaultEditComposerRuntimeCore(
-        this,
-        () => this._editComposers.delete(messageId),
-        this.repository.getMessage(messageId),
-      ),
-    );
-    this.notifySubscribers();
+    super.beginEdit(messageId);
   }
 
   constructor(
-    private configProvider: ModelConfigProvider,
+    configProvider: ModelConfigProvider,
     store: ExternalStoreAdapter<any>,
   ) {
-    this.store = store;
+    super(configProvider);
+    this.__internal_setAdapter(store);
   }
 
-  public get store() {
-    return this._store;
-  }
-
-  public set store(store: ExternalStoreAdapter<any>) {
+  public __internal_setAdapter(store: ExternalStoreAdapter<any>) {
     if (this._store === store) return;
 
-    this.threadId = store.threadId ?? this.threadId ?? generateId();
     const isRunning = store.isRunning ?? false;
     this.isDisabled = store.isDisabled ?? false;
 
@@ -114,13 +98,11 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
       edit: this._store.onEdit !== undefined,
       reload: this._store.onReload !== undefined,
       cancel: this._store.onCancel !== undefined,
-      speak: this._store.onSpeak !== undefined,
+      speech: this._store.adapters?.speech !== undefined,
       unstable_copy: this._store.unstable_capabilities?.copy !== false, // default true
-      attachments: !!this.store.adapters?.attachments,
-      feedback: !!this.store.adapters?.feedback,
+      attachments: !!this._store.adapters?.attachments,
+      feedback: !!this._store.adapters?.feedback,
     };
-
-    this.composer.setAttachmentAdapter(this._store.adapters?.attachments);
 
     if (oldStore) {
       // flush the converter cache when the convertMessage prop changes
@@ -130,7 +112,7 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
         oldStore.isRunning === store.isRunning &&
         oldStore.messages === store.messages
       ) {
-        this.notifySubscribers();
+        this._notifySubscribers();
         // no conversion update
         return;
       }
@@ -152,14 +134,17 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
           )
             return cache;
 
+          const messageLike = store.convertMessage(m, idx);
           const newMessage = fromThreadMessageLike(
-            store.convertMessage(m, idx),
+            messageLike,
             idx.toString(),
             autoStatus,
           );
           (newMessage as any)[symbolInnerMessage] = m;
           return newMessage;
         });
+
+    if (messages.length > 0) this.ensureInitialized();
 
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i]!;
@@ -186,23 +171,11 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
       this.assistantOptimisticId ?? messages.at(-1)?.id ?? null,
     );
 
-    this.messages = this.repository.getMessages();
-    this.notifySubscribers();
+    this._messages = this.repository.getMessages();
+    this._notifySubscribers();
   }
 
-  public getModelConfig() {
-    return this.configProvider.getModelConfig();
-  }
-
-  private notifySubscribers() {
-    for (const callback of this._subscriptions) callback();
-  }
-
-  public getBranches(messageId: string): string[] {
-    return this.repository.getBranches(messageId);
-  }
-
-  public switchToBranch(branchId: string): void {
+  public override switchToBranch(branchId: string): void {
     if (!this._store.setMessages)
       throw new Error("Runtime does not support switching branches.");
 
@@ -220,11 +193,11 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
     }
   }
 
-  public async startRun(parentId: string | null): Promise<void> {
+  public async startRun(config: StartRunConfig): Promise<void> {
     if (!this._store.onReload)
       throw new Error("Runtime does not support reloading messages.");
 
-    await this._store.onReload(parentId);
+    await this._store.onReload(config.parentId, config);
   }
 
   public cancelRun(): void {
@@ -251,7 +224,7 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
 
       messages = this.repository.getMessages();
     } else {
-      this.notifySubscribers();
+      this._notifySubscribers();
     }
 
     // resync messages (for reloading, to restore the previous branch)
@@ -266,38 +239,14 @@ export class ExternalStoreThreadRuntimeCore implements ThreadRuntimeCore {
     this._store.onAddToolResult(options);
   }
 
-  public speak(messageId: string) {
-    if (!this._store.onSpeak)
-      throw new Error("Runtime does not support speaking.");
-
-    const { message } = this.repository.getMessage(messageId);
-    return this._store.onSpeak(message);
-  }
-
-  public submitFeedback({ messageId, type }: SubmitFeedbackOptions) {
-    const adapter = this._store.adapters?.feedback;
-    if (!adapter) throw new Error("Feedback adapter not configured");
-
-    const { message } = this.repository.getMessage(messageId);
-    adapter.submit({ message, type });
-  }
-
-  public subscribe(callback: () => void): Unsubscribe {
-    this._subscriptions.add(callback);
-    return () => this._subscriptions.delete(callback);
-  }
-
   private updateMessages = (messages: ThreadMessage[]) => {
-    this._store.setMessages?.(
-      messages.flatMap(getExternalStoreMessage).filter((m) => m != null),
-    );
+    const hasConverter = this._store.convertMessage !== undefined;
+    if (hasConverter) {
+      this._store.setMessages?.(
+        messages.flatMap(getExternalStoreMessage).filter((m) => m != null),
+      );
+    } else {
+      this._store.setMessages?.(messages);
+    }
   };
-
-  public import(repository: ExportedMessageRepository) {
-    this.repository.import(repository);
-  }
-
-  public export(): ExportedMessageRepository {
-    return this.repository.export();
-  }
 }

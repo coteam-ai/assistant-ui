@@ -1,36 +1,55 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { composeEventHandlers } from "@radix-ui/primitive";
-import { useOnComposerFocus } from "../../utils/hooks/useOnComposerFocus";
 import { ScopedProps, usePopoverScope } from "./scope";
+import { useThreadRuntime } from "../../context";
 
-export type AssistantModalPrimitiveRootProps = PopoverPrimitive.PopoverProps;
+export namespace AssistantModalPrimitiveRoot {
+  export type Props = PopoverPrimitive.PopoverProps & {
+    unstable_openOnRunStart?: boolean | undefined;
+  };
+}
 
-const useAssistantModalOpenState = (defaultOpen = false) => {
+const useAssistantModalOpenState = ({
+  defaultOpen = false,
+  unstable_openOnRunStart = true,
+}: {
+  defaultOpen?: boolean | undefined;
+  unstable_openOnRunStart?: boolean | undefined;
+}) => {
   const state = useState(defaultOpen);
 
   const [, setOpen] = state;
-  useOnComposerFocus(() => {
-    setOpen(true);
-  });
+  const threadRuntime = useThreadRuntime();
+  useEffect(() => {
+    if (!unstable_openOnRunStart) return undefined;
+
+    return threadRuntime.unstable_on("run-start", () => {
+      setOpen(true);
+    });
+  }, [unstable_openOnRunStart]);
 
   return state;
 };
 
 export const AssistantModalPrimitiveRoot: FC<
-  AssistantModalPrimitiveRootProps
+  AssistantModalPrimitiveRoot.Props
 > = ({
   __scopeAssistantModal,
   defaultOpen,
+  unstable_openOnRunStart,
   open,
   onOpenChange,
   ...rest
-}: ScopedProps<AssistantModalPrimitiveRootProps>) => {
+}: ScopedProps<AssistantModalPrimitiveRoot.Props>) => {
   const scope = usePopoverScope(__scopeAssistantModal);
 
-  const [modalOpen, setOpen] = useAssistantModalOpenState(defaultOpen);
+  const [modalOpen, setOpen] = useAssistantModalOpenState({
+    defaultOpen,
+    unstable_openOnRunStart,
+  });
 
   return (
     <PopoverPrimitive.Root

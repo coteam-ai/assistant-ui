@@ -1,8 +1,9 @@
 import { FC, ReactNode } from "react";
-import { HomeLayout } from "fumadocs-ui/home-layout";
+import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { baseOptions } from "../docs/layout.config";
 import Image from "next/image";
 import icon from "../../public/favicon/icon.svg";
+import Link from "next/link";
 
 export default function Layout({
   children,
@@ -22,7 +23,7 @@ function Footer(): React.ReactElement {
     <footer className="relative border-t px-8 pb-32 pt-20">
       <div className="mx-auto flex w-full max-w-screen-xl flex-col items-start justify-between sm:flex-row">
         <div className="mb-4 mr-4 sm:flex">
-          <a
+          <Link
             className="mr-4 flex items-center gap-2 text-sm font-normal text-black"
             href="/"
           >
@@ -34,12 +35,13 @@ function Footer(): React.ReactElement {
             <span className="font-medium text-black dark:text-white">
               assistant-ui
             </span>
-          </a>
+          </Link>
         </div>
         <div className="mt-10 grid grid-cols-2 items-start gap-10 sm:mt-0">
           <div className="flex w-[160px] flex-col justify-center gap-4">
             <p className="text-sm">Product</p>
-            <FooterLink href="/docs">Documentation</FooterLink>
+            <FooterLink href="/docs/getting-started">Documentation</FooterLink>
+            <FooterLink href="/showcase">Showcase</FooterLink>
             <FooterLink href="/examples">Examples</FooterLink>
             <FooterLink href="/blog">Blog</FooterLink>
           </div>
@@ -48,7 +50,7 @@ function Footer(): React.ReactElement {
             <FooterLink href="https://discord.gg/S9dwgCNEFs">
               Discord
             </FooterLink>
-            <FooterLink href="https://github.com/Yonom/assistant-ui">
+            <FooterLink href="https://github.com/assistant-ui/assistant-ui">
               GitHub
             </FooterLink>
             <FooterLink href="https://cal.com/simon-farshid/assistant-ui">

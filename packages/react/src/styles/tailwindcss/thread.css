@@ -9,7 +9,7 @@
 }
 
 .aui-thread-viewport-footer {
-  @apply sticky bottom-0 mt-3 flex w-full max-w-2xl flex-col items-center justify-end rounded-t-lg bg-inherit pb-4;
+  @apply max-w-aui-thread sticky bottom-0 mt-3 flex w-full flex-col items-center justify-end rounded-t-lg bg-inherit pb-4;
 }
 
 .aui-thread-scroll-to-bottom {
@@ -27,7 +27,7 @@
 /* thread welcome */
 
 .aui-thread-welcome-root {
-  @apply flex w-full max-w-2xl flex-grow flex-col;
+  @apply max-w-aui-thread flex w-full flex-grow flex-col;
 }
 
 .aui-thread-welcome-center {
@@ -39,7 +39,7 @@
 }
 
 .aui-thread-welcome-suggestion-container {
-  @apply mt-4 flex w-full items-stretch justify-center gap-4;
+  @apply mt-3 flex w-full items-stretch justify-center gap-4;
 }
 
 .aui-thread-welcome-suggestion {
@@ -50,12 +50,10 @@
   @apply line-clamp-2 text-ellipsis text-sm font-semibold;
 }
 
-/* TODO rename classes to .aui-thread-composer-root ? */
-/* rename composer to thread composer everywhere */
 /* thread composer */
 
 .aui-composer-root {
-  @apply focus-within:border-aui-ring/20 flex w-full flex-wrap items-end rounded-lg border px-2.5 shadow-sm transition-colors ease-in;
+  @apply focus-within:border-aui-ring/20 flex w-full flex-wrap items-end rounded-lg border bg-inherit px-2.5 shadow-sm transition-colors ease-in;
 }
 
 .aui-composer-input {
@@ -72,19 +70,45 @@
   @apply flex w-full flex-row gap-3 px-10;
 }
 
-.aui-composer-attachment-root {
-  @apply bg-aui-muted relative mt-4 flex size-20 items-center justify-center rounded-lg p-2;
+/* attachment */
+
+.aui-attachment-root {
+  @apply relative mt-3;
 }
 
-.aui-composer-attachment-remove {
-  @apply absolute -right-3 -top-3 size-7;
+.aui-attachment-content {
+  @apply flex h-12 w-40 items-center justify-center gap-2 rounded-lg border p-1;
+}
+
+.aui-attachment-preview-trigger {
+  @apply hover:bg-aui-accent/50 cursor-pointer transition-colors;
+}
+
+.aui-attachment-thumb {
+  @apply bg-aui-muted flex size-10 items-center justify-center rounded border text-sm;
+}
+
+.aui-attachment-text {
+  @apply flex-grow basis-0;
+}
+
+.aui-attachment-name {
+  @apply text-aui-muted-foreground line-clamp-1 text-ellipsis text-xs font-bold;
+}
+
+.aui-attachment-type {
+  @apply text-aui-muted-foreground text-xs;
+}
+
+.aui-attachment-remove {
+  @apply text-aui-muted-foreground [&>svg]:bg-aui-background absolute -right-3 -top-3 size-6 [&>svg]:size-4 [&>svg]:rounded-full;
 }
 
 /* user message */
 
 .aui-user-message-root {
   @apply grid auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 [&>*]:col-start-2;
-  @apply w-full max-w-2xl py-4;
+  @apply max-w-aui-thread w-full py-4;
 }
 
 :where(.aui-user-message-root) > .aui-user-action-bar-root {
@@ -106,15 +130,11 @@
 }
 
 .aui-user-message-content {
-  @apply bg-aui-muted text-aui-foreground max-w-xl break-words rounded-3xl px-5 py-2.5;
+  @apply bg-aui-muted text-aui-foreground max-w-[calc(var(--aui-thread-max-width)*0.8)] break-words rounded-3xl px-5 py-2.5;
 }
 
 .aui-user-message-attachments {
   @apply flex w-full flex-row gap-3;
-}
-
-.aui-user-message-attachment-root {
-  @apply bg-aui-muted relative flex size-20 items-center justify-center rounded-lg p-2;
 }
 
 /* user action bar */
@@ -126,7 +146,7 @@
 /* edit composer */
 
 .aui-edit-composer-root {
-  @apply bg-aui-muted my-4 flex w-full max-w-2xl flex-col gap-2 rounded-xl;
+  @apply bg-aui-muted max-w-aui-thread my-4 flex w-full flex-col gap-2 rounded-xl;
 }
 
 .aui-edit-composer-input {
@@ -141,7 +161,7 @@
 
 .aui-assistant-message-root {
   @apply grid grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr];
-  @apply relative w-full max-w-2xl py-4;
+  @apply max-w-aui-thread relative w-full py-4;
 }
 
 :where(.aui-assistant-message-root) > .aui-avatar-root {
@@ -163,7 +183,7 @@
 }
 
 .aui-assistant-message-content {
-  @apply text-aui-foreground max-w-xl break-words leading-7;
+  @apply text-aui-foreground max-w-[calc(var(--aui-thread-max-width)*0.8)] break-words leading-7;
 }
 
 /* assistant action bar */
@@ -202,4 +222,34 @@
 
 .aui-text-running::after {
   @apply animate-pulse font-sans content-['\25CF'] ltr:ml-1 rtl:mr-1;
+}
+
+/* thread-list */
+
+.aui-thread-list-root {
+  @apply flex flex-col items-stretch gap-1.5;
+}
+
+.aui-thread-list-item {
+  @apply data-[active]:bg-aui-muted hover:bg-aui-muted focus-visible:bg-aui-muted focus-visible:ring-aui-ring flex items-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2;
+}
+
+.aui-thread-list-new {
+  @apply data-[active]:bg-aui-muted hover:bg-aui-muted flex items-center justify-start gap-1 rounded-lg px-2.5 py-2 text-start;
+}
+
+.aui-thread-list-new > .lucide-plus {
+  @apply size-5;
+}
+
+.aui-thread-list-item-trigger {
+  @apply flex-grow px-3 py-2 text-start;
+}
+
+.aui-thread-list-item-title {
+  @apply text-sm;
+}
+
+.aui-thread-list-item-archive {
+  @apply hover:text-aui-primary text-aui-foreground ml-auto mr-3 size-4 p-0;
 }

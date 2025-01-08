@@ -8,10 +8,16 @@ import { ThreadRuntimeProvider } from "./ThreadRuntimeProvider";
 import { AssistantRuntime } from "../../api/AssistantRuntime";
 import { create } from "zustand";
 import { writableStore } from "../ReadonlyStore";
+import { AssistantRuntimeCore } from "../../runtimes/core/AssistantRuntimeCore";
 
-type AssistantRuntimeProviderProps = {
-  runtime: AssistantRuntime;
-};
+export namespace AssistantRuntimeProvider {
+  export type Props = PropsWithChildren<{
+    /**
+     * The runtime to provide to the rest of your app.
+     */
+    runtime: AssistantRuntime;
+  }>;
+}
 
 const useAssistantRuntimeStore = (runtime: AssistantRuntime) => {
   const [store] = useState(() => create(() => runtime));
@@ -27,22 +33,46 @@ const useAssistantToolUIsStore = () => {
   return useMemo(() => makeAssistantToolUIsStore(), []);
 };
 
+const useThreadListStore = (runtime: AssistantRuntime) => {
+  const [store] = useState(() => create(() => runtime.threadList.getState()));
+
+  useEffect(() => {
+    const updateState = () =>
+      writableStore(store).setState(runtime.threadList.getState(), true);
+    updateState();
+    return runtime.threadList.subscribe(updateState);
+  }, [runtime, store]);
+
+  return store;
+};
+
+const getRenderComponent = (runtime: AssistantRuntime) => {
+  return (runtime as { _core?: AssistantRuntimeCore })._core?.RenderComponent;
+};
+
 export const AssistantRuntimeProviderImpl: FC<
-  PropsWithChildren<AssistantRuntimeProviderProps>
+  AssistantRuntimeProvider.Props
 > = ({ children, runtime }) => {
   const useAssistantRuntime = useAssistantRuntimeStore(runtime);
   const useToolUIs = useAssistantToolUIsStore();
+  const useThreadList = useThreadListStore(runtime);
   const context = useMemo(() => {
     return {
       useToolUIs,
       useAssistantRuntime,
-      useAssistantActions: useAssistantRuntime,
+      useThreadList,
     };
-  }, [useAssistantRuntime, useToolUIs]);
+  }, [useAssistantRuntime, useToolUIs, useThreadList]);
+
+  const RenderComponent = getRenderComponent(runtime);
 
   return (
     <AssistantContext.Provider value={context}>
-      <ThreadRuntimeProvider runtime={runtime.thread}>
+      {RenderComponent && <RenderComponent />}
+      <ThreadRuntimeProvider
+        runtime={runtime.thread}
+        listItemRuntime={runtime.threadList.mainItem}
+      >
         {children}
       </ThreadRuntimeProvider>
     </AssistantContext.Provider>

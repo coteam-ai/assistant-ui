@@ -1,4 +1,5 @@
 export type { ThreadRuntimeCore } from "./runtimes/core/ThreadRuntimeCore";
+export type { ThreadListRuntimeCore } from "./runtimes/core/ThreadListRuntimeCore";
 export { DefaultThreadComposerRuntimeCore } from "./runtimes/composer/DefaultThreadComposerRuntimeCore";
 export { ProxyConfigProvider } from "./utils/ProxyConfigProvider";
 export { MessageRepository } from "./runtimes/utils/MessageRepository";
@@ -9,6 +10,7 @@ export { AssistantRuntimeImpl } from "./api/AssistantRuntime";
 export {
   ThreadRuntimeImpl,
   type ThreadRuntimeCoreBinding,
+  type ThreadListItemRuntimeBinding,
 } from "./api/ThreadRuntime";
 
 export * from "./utils/smooth";

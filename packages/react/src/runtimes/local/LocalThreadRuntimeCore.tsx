@@ -3,96 +3,72 @@ import type {
   ModelConfigProvider,
   AppendMessage,
   ThreadAssistantMessage,
-  Unsubscribe,
 } from "../../types";
-import { fromCoreMessage, fromCoreMessages } from "../edge";
-import {
-  ExportedMessageRepository,
-  MessageRepository,
-} from "../utils/MessageRepository";
-import type { ChatModelAdapter, ChatModelRunResult } from "./ChatModelAdapter";
-import { DefaultThreadComposerRuntimeCore } from "../composer/DefaultThreadComposerRuntimeCore";
+import { fromCoreMessage } from "../edge";
+import type { ChatModelRunResult } from "./ChatModelAdapter";
 import { shouldContinue } from "./shouldContinue";
-import { LocalRuntimeOptions } from "./LocalRuntimeOptions";
-import { SpeechSynthesisAdapter } from "../speech";
+import { LocalRuntimeOptionsBase } from "./LocalRuntimeOptions";
 import {
   AddToolResultOptions,
   ThreadSuggestion,
-  SubmitFeedbackOptions,
   ThreadRuntimeCore,
+  StartRunConfig,
 } from "../core/ThreadRuntimeCore";
-import { DefaultEditComposerRuntimeCore } from "../composer/DefaultEditComposerRuntimeCore";
+import { BaseThreadRuntimeCore } from "../core/BaseThreadRuntimeCore";
+import { RunConfig } from "../../types/AssistantTypes";
 
-export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
-  private _subscriptions = new Set<() => void>();
-
-  private abortController: AbortController | null = null;
-  private readonly repository = new MessageRepository();
-
+export class LocalThreadRuntimeCore
+  extends BaseThreadRuntimeCore
+  implements ThreadRuntimeCore
+{
   public readonly capabilities = {
     switchToBranch: true,
     edit: true,
     reload: true,
     cancel: true,
     unstable_copy: true,
-    speak: false,
+    speech: false,
     attachments: false,
     feedback: false,
   };
 
-  public readonly threadId: string;
+  private abortController: AbortController | null = null;
+
   public readonly isDisabled = false;
   public readonly suggestions: readonly ThreadSuggestion[] = [];
 
-  public get messages() {
-    return this.repository.getMessages();
+  public get adapters() {
+    return this._options.adapters;
   }
-
-  public readonly composer = new DefaultThreadComposerRuntimeCore(this);
 
   constructor(
-    private configProvider: ModelConfigProvider,
-    public adapter: ChatModelAdapter,
-    { initialMessages, ...options }: LocalRuntimeOptions,
+    configProvider: ModelConfigProvider,
+    options: LocalRuntimeOptionsBase,
   ) {
-    this.threadId = generateId();
-    this.options = options;
-    if (initialMessages) {
-      let parentId: string | null = null;
-      const messages = fromCoreMessages(initialMessages);
-      for (const message of messages) {
-        this.repository.addOrUpdateMessage(parentId, message);
-        parentId = message.id;
-      }
-    }
+    super(configProvider);
+    this.__internal_setOptions(options);
   }
 
-  public getModelConfig() {
-    return this.configProvider.getModelConfig();
-  }
+  private _options!: LocalRuntimeOptionsBase;
 
-  private _options!: LocalRuntimeOptions;
-
-  public get options() {
-    return this._options;
-  }
+  private _lastRunConfig: RunConfig = {};
 
   public get extras() {
     return undefined;
   }
 
-  public set options({ initialMessages, ...options }: LocalRuntimeOptions) {
+  public __internal_setOptions(options: LocalRuntimeOptionsBase) {
+    if (this._options === options) return;
+
     this._options = options;
 
     let hasUpdates = false;
 
     const canSpeak = options.adapters?.speech !== undefined;
-    if (this.capabilities.speak !== canSpeak) {
-      this.capabilities.speak = canSpeak;
+    if (this.capabilities.speech !== canSpeak) {
+      this.capabilities.speech = canSpeak;
       hasUpdates = true;
     }
-
-    this.composer.setAttachmentAdapter(options.adapters?.attachments);
 
     const canAttach = options.adapters?.attachments !== undefined;
     if (this.capabilities.attachments !== canAttach) {
@@ -106,52 +82,35 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
       hasUpdates = true;
     }
 
-    if (hasUpdates) this.notifySubscribers();
-  }
-
-  private _editComposers = new Map<string, DefaultEditComposerRuntimeCore>();
-  public getEditComposer(messageId: string) {
-    return this._editComposers.get(messageId);
-  }
-  public beginEdit(messageId: string) {
-    if (this._editComposers.has(messageId))
-      throw new Error("Edit already in progress");
-
-    this._editComposers.set(
-      messageId,
-      new DefaultEditComposerRuntimeCore(
-        this,
-        () => this._editComposers.delete(messageId),
-        this.repository.getMessage(messageId),
-      ),
-    );
-    this.notifySubscribers();
-  }
-
-  public getBranches(messageId: string): string[] {
-    return this.repository.getBranches(messageId);
-  }
-
-  public switchToBranch(branchId: string): void {
-    this.repository.switchToBranch(branchId);
-    this.notifySubscribers();
+    if (hasUpdates) this._notifySubscribers();
   }
 
   public async append(message: AppendMessage): Promise<void> {
+    this.ensureInitialized();
+
     const newMessage = fromCoreMessage(message, {
       attachments: message.attachments,
     });
     this.repository.addOrUpdateMessage(message.parentId, newMessage);
 
-    if (message.role === "user") {
-      await this.startRun(newMessage.id);
+    const startRun = message.startRun ?? message.role === "user";
+    if (startRun) {
+      await this.startRun({
+        parentId: newMessage.id,
+        runConfig: message.runConfig ?? {},
+      });
     } else {
       this.repository.resetHead(newMessage.id);
-      this.notifySubscribers();
+      this._notifySubscribers();
     }
   }
 
-  public async startRun(parentId: string | null): Promise<void> {
+  public async startRun({
+    parentId,
+    runConfig,
+  }: StartRunConfig): Promise<void> {
+    this.ensureInitialized();
+
     this.repository.resetHead(parentId);
 
     // add assistant message
@@ -161,17 +120,21 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
       role: "assistant",
       status: { type: "running" },
       content: [],
+      metadata: { unstable_data: [], steps: [], custom: {} },
       createdAt: new Date(),
     };
 
+    this._notifyEventSubscribers("run-start");
+
     do {
-      message = await this.performRoundtrip(parentId, message);
+      message = await this.performRoundtrip(parentId, message, runConfig);
     } while (shouldContinue(message));
   }
 
   private async performRoundtrip(
     parentId: string | null,
     message: ThreadAssistantMessage,
+    runConfig: RunConfig | undefined,
   ) {
     const messages = this.repository.getMessages();
 
@@ -180,36 +143,30 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
     this.abortController = new AbortController();
 
     const initialContent = message.content;
-    const initialRoundtrips = message.metadata?.roundtrips;
+    const initialData = message.metadata?.unstable_data;
+    const initialSteps = message.metadata?.steps;
     const initalCustom = message.metadata?.custom;
     const updateMessage = (m: Partial<ChatModelRunResult>) => {
+      const newSteps = m.metadata?.steps;
+      const steps = newSteps
+        ? [...(initialSteps ?? []), ...newSteps]
+        : undefined;
+
+      const newData = m.metadata?.unstable_data;
+      const data = newData ? [...(initialData ?? []), ...newData] : undefined;
+
       message = {
         ...message,
         ...(m.content
           ? { content: [...initialContent, ...(m.content ?? [])] }
           : undefined),
         status: m.status ?? message.status,
-        // TODO deprecated, remove in v0.6
-        ...(m.metadata?.roundtrips
-          ? {
-              roundtrips: [
-                ...(initialRoundtrips ?? []),
-                ...m.metadata.roundtrips,
-              ],
-            }
-          : undefined),
         ...(m.metadata
           ? {
               metadata: {
                 ...message.metadata,
-                ...(m.metadata.roundtrips
-                  ? {
-                      roundtrips: [
-                        ...(initialRoundtrips ?? []),
-                        ...m.metadata.roundtrips,
-                      ],
-                    }
-                  : undefined),
+                ...(data ? { unstable_data: data } : undefined),
+                ...(steps ? { steps } : undefined),
                 ...(m.metadata?.custom
                   ? {
                       custom: { ...(initalCustom ?? {}), ...m.metadata.custom },
@@ -220,13 +177,14 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
           : undefined),
       };
       this.repository.addOrUpdateMessage(parentId, message);
-      this.notifySubscribers();
+      this._notifySubscribers();
     };
 
-    const maxToolRoundtrips = this.options.maxToolRoundtrips ?? 1;
-    const toolRoundtrips = message.metadata?.roundtrips?.length ?? 0;
-    if (toolRoundtrips > maxToolRoundtrips) {
-      // reached max tool roundtrips
+    const maxSteps = this._options.maxSteps ?? 2;
+
+    const steps = message.metadata?.steps?.length ?? 0;
+    if (steps >= maxSteps) {
+      // reached max tool steps
       updateMessage({
         status: {
           type: "incomplete",
@@ -243,11 +201,13 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
     }
 
     try {
-      const promiseOrGenerator = this.adapter.run({
+      this._lastRunConfig = runConfig ?? {};
+      const promiseOrGenerator = this.adapters.chatModel.run({
         messages,
+        runConfig: this._lastRunConfig,
         abortSignal: this.abortController.signal,
-        config: this.configProvider.getModelConfig(),
-        onUpdate: updateMessage,
+        config: this.getModelConfig(),
+        unstable_assistantMessageId: message.id,
       });
 
       // handle async iterator for streaming results
@@ -285,20 +245,9 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
     return message;
   }
 
-  cancelRun(): void {
-    if (!this.abortController) return;
-
-    this.abortController.abort();
+  public cancelRun() {
+    this.abortController?.abort();
     this.abortController = null;
-  }
-
-  private notifySubscribers() {
-    for (const callback of this._subscriptions) callback();
-  }
-
-  public subscribe(callback: () => void): Unsubscribe {
-    this._subscriptions.add(callback);
-    return () => this._subscriptions.delete(callback);
   }
 
   public addToolResult({
@@ -336,49 +285,7 @@ export class LocalThreadRuntimeCore implements ThreadRuntimeCore {
     this.repository.addOrUpdateMessage(parentId, message);
 
     if (added && shouldContinue(message)) {
-      this.performRoundtrip(parentId, message);
+      this.performRoundtrip(parentId, message, this._lastRunConfig);
     }
-  }
-
-  // TODO lift utterance state to thread runtime
-  private _utterance: SpeechSynthesisAdapter.Utterance | undefined;
-
-  public speak(messageId: string) {
-    const adapter = this.options.adapters?.speech;
-    if (!adapter) throw new Error("Speech adapter not configured");
-
-    const { message } = this.repository.getMessage(messageId);
-
-    if (this._utterance) {
-      this._utterance.cancel();
-      this._utterance = undefined;
-    }
-
-    const utterance = adapter.speak(message);
-    utterance.onEnd(() => {
-      if (this._utterance === utterance) {
-        this._utterance = undefined;
-      }
-    });
-    this._utterance = utterance;
-
-    return this._utterance;
-  }
-
-  public submitFeedback({ messageId, type }: SubmitFeedbackOptions) {
-    const adapter = this.options.adapters?.feedback;
-    if (!adapter) throw new Error("Feedback adapter not configured");
-
-    const { message } = this.repository.getMessage(messageId);
-    adapter.submit({ message, type });
-  }
-
-  public export() {
-    return this.repository.export();
-  }
-
-  public import(data: ExportedMessageRepository) {
-    this.repository.import(data);
-    this.notifySubscribers();
   }
 }

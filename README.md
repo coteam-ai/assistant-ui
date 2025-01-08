@@ -1,11 +1,11 @@
 <a href="https://www.assistant-ui.com">
-  <img src="https://raw.githubusercontent.com/Yonom/assistant-ui/main/.github/assets/header.svg" alt="assistant-ui Header" width="100%" style="width: 1000px" />
+  <img src="https://raw.githubusercontent.com/assistant-ui/assistant-ui/main/.github/assets/header.svg" alt="assistant-ui Header" width="100%" style="width: 1000px" />
 </a>
 
 <p align="center">
-  <a href="https://assistant-ui.com">Product</a> ·
-  <a href="https://assistant-ui.com/docs/getting-started">Documentation</a> ·
-  <a href="https://assistant-ui.com/examples">Examples</a> ·
+  <a href="https://www.assistant-ui.com">Product</a> ·
+  <a href="https://www.assistant-ui.com/docs/getting-started">Documentation</a> ·
+  <a href="https://www.assistant-ui.com/examples">Examples</a> ·
   <a href="https://discord.gg/S9dwgCNEFs">Discord Community</a> ·
   <a href="https://cal.com/simon-farshid/assistant-ui">Contact Sales</a>
 </p>
@@ -16,12 +16,12 @@ Wide model provider support (OpenAI, Anthropic, Mistral, Perplexity, AWS Bedrock
 
 ## Quick Start
 
-[![assistant-ui starter template](https://raw.githubusercontent.com/Yonom/assistant-ui/main/.github/assets/assistant-ui-starter.gif)](https://youtu.be/k6Dc8URmLjk)
+[![assistant-ui starter template](https://raw.githubusercontent.com/assistant-ui/assistant-ui/main/.github/assets/assistant-ui-starter.gif)](https://youtu.be/k6Dc8URmLjk)
 
 Step 1: Create a new project with `assistant-ui` pre-configured:
 
 ```sh
-npx assistant-ui@latest create my-app
+npx create-assistant-ui@latest my-app
 cd my-app
 ```
 

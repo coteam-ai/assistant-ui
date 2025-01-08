@@ -1,11 +1,22 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LangChainMessage, LangChainToolCall } from "./types";
 import {
   useExternalMessageConverter,
   useExternalStoreRuntime,
+  useThread,
+  useThreadListItemRuntime,
 } from "@assistant-ui/react";
 import { convertLangchainMessages } from "./convertLangchainMessages";
-import { useLangGraphMessages } from "./useLangGraphMessages";
+import {
+  LangGraphCommand,
+  LangGraphSendMessageConfig,
+  LangGraphStreamCallback,
+  useLangGraphMessages,
+} from "./useLangGraphMessages";
+import { SimpleImageAttachmentAdapter } from "@assistant-ui/react";
+import { AttachmentAdapter } from "@assistant-ui/react";
+import { AppendMessage } from "@assistant-ui/react";
+import { ExternalStoreAdapter } from "@assistant-ui/react";
 
 const getPendingToolCalls = (messages: LangChainMessage[]) => {
   const pendingToolCalls = new Map<string, LangChainToolCall>();
@@ -23,35 +34,115 @@ const getPendingToolCalls = (messages: LangChainMessage[]) => {
   return [...pendingToolCalls.values()];
 };
 
+const getMessageContent = (msg: AppendMessage) => {
+  const allContent = [
+    ...msg.content,
+    ...msg.attachments.flatMap((a) => a.content),
+  ];
+  const content = allContent.map((part) => {
+    const type = part.type;
+    switch (type) {
+      case "text":
+        return { type: "text" as const, text: part.text };
+      case "image":
+        return { type: "image_url" as const, image_url: { url: part.image } };
+
+      case "audio":
+        throw new Error("Audio appends are not supported yet.");
+      case "tool-call":
+        throw new Error("Tool call appends are not supported yet.");
+
+      default:
+        const _exhaustiveCheck: never = type;
+        throw new Error(`Unknown content part type: ${_exhaustiveCheck}`);
+    }
+  });
+
+  if (content.length === 1 && content[0]?.type === "text") {
+    return content[0].text ?? "";
+  }
+
+  return content;
+};
+
+const symbolLangGraphRuntimeExtras = Symbol("langgraph-runtime-extras");
+type LangGraphRuntimeExtras = {
+  [symbolLangGraphRuntimeExtras]: true;
+  send: (
+    messages: LangChainMessage[],
+    config: LangGraphSendMessageConfig,
+  ) => Promise<void>;
+};
+
+const asLangGraphRuntimeExtras = (extras: unknown): LangGraphRuntimeExtras => {
+  if (
+    typeof extras !== "object" ||
+    extras == null ||
+    !(symbolLangGraphRuntimeExtras in extras)
+  )
+    throw new Error(
+      "This method can only be called when you are using useLangGraphRuntime",
+    );
+
+  return extras as LangGraphRuntimeExtras;
+};
+
+export const useLangGraphRuntimeSend = () => {
+  const { send } = useThread((t) => asLangGraphRuntimeExtras(t.extras));
+  return send;
+};
+
+export const useLangGraphRuntimeSendCommand = (command: LangGraphCommand) => {
+  const send = useLangGraphRuntimeSend();
+  return () => send([], { command });
+};
+
 export const useLangGraphRuntime = ({
-  threadId,
   autoCancelPendingToolCalls,
+  adapters: { attachments } = {},
+  unstable_allowImageAttachments,
+  unstable_allowCancellation,
   stream,
+  threadId,
   onSwitchToNewThread,
   onSwitchToThread,
 }: {
+  /**
+   * @deprecated For thread management use `useCloudThreadListRuntime` instead. This option will be removed in a future version.
+   */
   threadId?: string | undefined;
   autoCancelPendingToolCalls?: boolean | undefined;
-  stream: (messages: LangChainMessage[]) => Promise<
-    AsyncGenerator<{
-      event: string;
-      data: any;
-    }>
-  >;
+  /**
+   * @deprecated Use `adapters: { attachments: new SimpleImageAttachmentAdapter() }` instead. This option will be removed in a future version.
+   */
+  unstable_allowImageAttachments?: boolean | undefined;
+  unstable_allowCancellation?: boolean | undefined;
+  stream: LangGraphStreamCallback<LangChainMessage>;
+  /**
+   * @deprecated For thread management use `useCloudThreadListRuntime` instead. This option will be removed in a future version.
+   */
   onSwitchToNewThread?: () => Promise<void> | void;
   onSwitchToThread?: (
     threadId: string,
   ) => Promise<{ messages: LangChainMessage[] }>;
+  adapters?:
+    | {
+        attachments?: AttachmentAdapter;
+      }
+    | undefined;
 }) => {
-  const { messages, sendMessage, setMessages } = useLangGraphMessages({
+  const { messages, sendMessage, cancel, setMessages } = useLangGraphMessages({
     stream,
   });
 
   const [isRunning, setIsRunning] = useState(false);
-  const handleSendMessage = async (messages: LangChainMessage[]) => {
+  const handleSendMessage = async (
+    messages: LangChainMessage[],
+    config: LangGraphSendMessageConfig,
+  ) => {
     try {
       setIsRunning(true);
-      await sendMessage(messages);
+      await sendMessage(messages, config);
     } catch (error) {
       console.error("Error streaming messages:", error);
     } finally {
@@ -65,14 +156,59 @@ export const useLangGraphRuntime = ({
     isRunning,
   });
 
-  return useExternalStoreRuntime({
+  if (attachments && unstable_allowImageAttachments)
+    throw new Error(
+      "Replace unstable_allowImageAttachments with `adapters: { attachments: new SimpleImageAttachmentAdapter() }`.",
+    );
+  if (unstable_allowImageAttachments)
+    attachments = new SimpleImageAttachmentAdapter();
+
+  const switchToThread = !onSwitchToThread
+    ? undefined
+    : async (threadId: string) => {
+        const { messages } = await onSwitchToThread(threadId);
+        setMessages(messages);
+      };
+
+  const threadList: NonNullable<
+    ExternalStoreAdapter["adapters"]
+  >["threadList"] = {
     threadId,
+    onSwitchToNewThread: !onSwitchToNewThread
+      ? undefined
+      : async () => {
+          await onSwitchToNewThread();
+          setMessages([]);
+        },
+    onSwitchToThread: switchToThread,
+  };
+
+  const loadingRef = useRef(false);
+  const threadListItemRuntime = useThreadListItemRuntime({ optional: true });
+  useEffect(() => {
+    if (!threadListItemRuntime || !switchToThread || loadingRef.current) return;
+
+    const externalId = threadListItemRuntime.getState().externalId;
+    if (externalId) {
+      loadingRef.current = true;
+      switchToThread(externalId).finally(() => {
+        loadingRef.current = false;
+      });
+    }
+  }, []);
+
+  return useExternalStoreRuntime({
     isRunning,
     messages: threadMessages,
+    adapters: {
+      attachments,
+      threadList,
+    },
+    extras: {
+      [symbolLangGraphRuntimeExtras]: true,
+      send: handleSendMessage,
+    } satisfies LangGraphRuntimeExtras,
     onNew: (msg) => {
-      if (msg.content.length !== 1 || msg.content[0]?.type !== "text")
-        throw new Error("Only text messages are supported");
-
       const cancellations =
         autoCancelPendingToolCalls !== false
           ? getPendingToolCalls(messages).map(
@@ -86,35 +222,38 @@ export const useLangGraphRuntime = ({
             )
           : [];
 
-      return handleSendMessage([
-        ...cancellations,
+      return handleSendMessage(
+        [
+          ...cancellations,
+          {
+            type: "human",
+            content: getMessageContent(msg),
+          },
+        ],
         {
-          type: "human",
-          content: msg.content[0].text,
+          runConfig: msg.runConfig,
         },
-      ]);
+      );
     },
     onAddToolResult: async ({ toolCallId, toolName, result }) => {
-      await handleSendMessage([
-        {
-          type: "tool",
-          name: toolName,
-          tool_call_id: toolCallId,
-          content: JSON.stringify(result),
-        },
-      ]);
+      // TODO parallel human in the loop calls
+      await handleSendMessage(
+        [
+          {
+            type: "tool",
+            name: toolName,
+            tool_call_id: toolCallId,
+            content: JSON.stringify(result),
+          },
+        ],
+        // TODO reuse runconfig here!
+        {},
+      );
     },
-    onSwitchToNewThread: !onSwitchToNewThread
-      ? undefined
-      : async () => {
-          await onSwitchToNewThread();
-          setMessages([]);
-        },
-    onSwitchToThread: !onSwitchToThread
-      ? undefined
-      : async (threadId) => {
-          const { messages } = await onSwitchToThread(threadId);
-          setMessages(messages);
-        },
+    onCancel: unstable_allowCancellation
+      ? async () => {
+          cancel();
+        }
+      : undefined,
   });
 };

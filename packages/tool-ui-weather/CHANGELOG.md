@@ -1,5 +1,78 @@
 # @tool-ui/weather
 
+## 0.0.21
+
+### Patch Changes
+
+- 4c2bf58: chore: update dependencies
+
+## 0.0.20
+
+### Patch Changes
+
+- 982a6a2: chore: update dependencies
+
+## 0.0.19
+
+### Patch Changes
+
+- ec3b8cc: chore: update dependencies
+
+## 0.0.18
+
+### Patch Changes
+
+- 4c54273: chore: update dependencies
+
+## 0.0.17
+
+### Patch Changes
+
+- 2112ce8: chore: update dependencies
+
+## 0.0.16
+
+### Patch Changes
+
+- 933b8c0: chore: update deps
+
+## 0.0.15
+
+### Patch Changes
+
+- c59d8b5: chore: update dependencies
+
+## 0.0.14
+
+### Patch Changes
+
+- 1ada091: chore: update deps
+
+## 0.0.13
+
+### Patch Changes
+
+- ff5b86c: chore: update deps
+
+## 0.0.12
+
+### Patch Changes
+
+- d2375cd: build: disable bundling in UI package releases
+
+## 0.0.11
+
+### Patch Changes
+
+- fb32e61: chore: update deps
+- fb32e61: feat: react-19 support
+
+## 0.0.10
+
+### Patch Changes
+
+- fb46305: chore: update dependencies
+
 ## 0.0.9
 
 ### Patch Changes

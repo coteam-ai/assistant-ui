@@ -1,4 +1,5 @@
 import { AppendMessage, PendingAttachment } from "../../types";
+import { AttachmentAdapter } from "../attachment";
 import { ThreadComposerRuntimeCore } from "../core/ComposerRuntimeCore";
 import { ThreadRuntimeCore } from "../core/ThreadRuntimeCore";
 import { BaseComposerRuntimeCore } from "./BaseComposerRuntimeCore";
@@ -16,7 +17,15 @@ export class DefaultThreadComposerRuntimeCore
     return super.attachments as readonly PendingAttachment[];
   }
 
-  constructor(private runtime: Omit<ThreadRuntimeCore, "composer">) {
+  protected getAttachmentAdapter() {
+    return this.runtime.adapters?.attachments;
+  }
+
+  constructor(
+    private runtime: Omit<ThreadRuntimeCore, "composer"> & {
+      adapters?: { attachments?: AttachmentAdapter | undefined } | undefined;
+    },
+  ) {
     super();
     this.connect();
   }
@@ -25,7 +34,7 @@ export class DefaultThreadComposerRuntimeCore
     return this.runtime.subscribe(() => {
       if (this.canCancel !== this.runtime.capabilities.cancel) {
         this._canCancel = this.runtime.capabilities.cancel;
-        this.notifySubscribers();
+        this._notifySubscribers();
       }
     });
   }
@@ -37,7 +46,7 @@ export class DefaultThreadComposerRuntimeCore
     });
   }
 
-  public async cancel() {
+  public async handleCancel() {
     this.runtime.cancelRun();
   }
 }

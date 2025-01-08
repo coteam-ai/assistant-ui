@@ -18,7 +18,6 @@ export const useAssistantToolUI = (
   const toolUIsStore = useToolUIsStore();
   useEffect(() => {
     if (!tool) return;
-    const { toolName, render } = tool;
-    return toolUIsStore.getState().setToolUI(toolName, render);
-  }, [toolUIsStore, tool]);
+    return toolUIsStore.getState().setToolUI(tool.toolName, tool.render);
+  }, [toolUIsStore, tool?.toolName, tool?.render]);
 };

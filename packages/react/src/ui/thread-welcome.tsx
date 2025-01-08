@@ -29,17 +29,21 @@ const ThreadWelcomeCenter = withDefaults("div", {
   className: "aui-thread-welcome-center",
 });
 
-type ThreadWelcomeRootProps = ComponentPropsWithoutRef<"div">;
+namespace ThreadWelcomeRoot {
+  export type Element = HTMLDivElement;
+  export type Props = ComponentPropsWithoutRef<"div">;
+}
 
-const ThreadWelcomeRoot = forwardRef<HTMLDivElement, ThreadWelcomeRootProps>(
-  (props, ref) => {
-    return (
-      <ThreadPrimitive.Empty>
-        <ThreadWelcomeRootStyled {...props} ref={ref} />
-      </ThreadPrimitive.Empty>
-    );
-  },
-);
+const ThreadWelcomeRoot = forwardRef<
+  ThreadWelcomeRoot.Element,
+  ThreadWelcomeRoot.Props
+>((props, ref) => {
+  return (
+    <ThreadPrimitive.Empty>
+      <ThreadWelcomeRootStyled {...props} ref={ref} />
+    </ThreadPrimitive.Empty>
+  );
+});
 
 ThreadWelcomeRoot.displayName = "ThreadWelcomeRoot";
 
@@ -52,20 +56,27 @@ const ThreadWelcomeMessageStyled = withDefaults("p", {
   className: "aui-thread-welcome-message",
 });
 
-export type ThreadWelcomeMessageProps = Omit<
-  ComponentPropsWithoutRef<typeof ThreadWelcomeMessageStyled>,
-  "children"
-> & { message?: string | undefined };
+namespace ThreadWelcomeMessage {
+  export type Element = HTMLParagraphElement;
+  export type Props = Omit<
+    ComponentPropsWithoutRef<typeof ThreadWelcomeMessageStyled>,
+    "children"
+  > & { message?: string | undefined };
+}
 
 const ThreadWelcomeMessage = forwardRef<
-  HTMLParagraphElement,
-  ThreadWelcomeMessageProps
+  ThreadWelcomeMessage.Element,
+  ThreadWelcomeMessage.Props
 >(({ message: messageProp, ...rest }, ref) => {
-  const { welcome: { message = "How can I help you today?" } = {} } =
-    useThreadConfig();
+  const {
+    welcome: { message } = {},
+    strings: {
+      welcome: { message: defaultMessage = "How can I help you today?" } = {},
+    } = {},
+  } = useThreadConfig();
   return (
     <ThreadWelcomeMessageStyled {...rest} ref={ref}>
-      {messageProp ?? message}
+      {messageProp ?? message ?? defaultMessage}
     </ThreadWelcomeMessageStyled>
   );
 });
@@ -80,11 +91,13 @@ const ThreadWelcomeSuggestionStyled = withDefaults(ThreadPrimitive.Suggestion, {
   className: "aui-thread-welcome-suggestion",
 });
 
-export type ThreadWelcomeSuggestionProps = {
-  suggestion: SuggestionConfig;
-};
+export namespace ThreadWelcomeSuggestion {
+  export type Props = {
+    suggestion: SuggestionConfig;
+  };
+}
 
-const ThreadWelcomeSuggestion: FC<ThreadWelcomeSuggestionProps> = ({
+const ThreadWelcomeSuggestion: FC<ThreadWelcomeSuggestion.Props> = ({
   suggestion: { text, prompt },
 }) => {
   return (

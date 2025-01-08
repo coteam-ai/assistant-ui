@@ -1,17 +1,16 @@
-import { ChatModelRunResult } from "../../local/ChatModelAdapter";
+import { CoreChatModelRunResult } from "../../local/ChatModelAdapter";
 import { parsePartialJson } from "../partial-json/parse-partial-json";
 import { LanguageModelV1StreamPart } from "@ai-sdk/provider";
 import { ToolResultStreamPart } from "./toolResultStream";
-import { MessageStatus } from "../../../types";
+import { MessageStatus, ToolCallContentPart } from "../../../types";
 
 export function runResultStream() {
-  let message: ChatModelRunResult = {
+  let message: CoreChatModelRunResult = {
     content: [],
     status: { type: "running" },
   };
-  const currentToolCall = { toolCallId: "", argsText: "" };
 
-  return new TransformStream<ToolResultStreamPart, ChatModelRunResult>({
+  return new TransformStream<ToolResultStreamPart, CoreChatModelRunResult>({
     transform(chunk, controller) {
       const chunkType = chunk.type;
       switch (chunkType) {
@@ -20,28 +19,30 @@ export function runResultStream() {
           controller.enqueue(message);
           break;
         }
+
         case "tool-call-delta": {
           const { toolCallId, toolName, argsTextDelta } = chunk;
-          if (currentToolCall.toolCallId !== toolCallId) {
-            currentToolCall.toolCallId = toolCallId;
-            currentToolCall.argsText = argsTextDelta;
-          } else {
-            currentToolCall.argsText += argsTextDelta;
-          }
 
           message = appendOrUpdateToolCall(
             message,
             toolCallId,
             toolName,
-            currentToolCall.argsText,
+            argsTextDelta,
           );
           controller.enqueue(message);
           break;
         }
 
         case "tool-call":
+        // ignoring tool call events because they are converted to tool-call-delta as well
         case "response-metadata":
           break;
+
+        case "data": {
+          message = appendData(message, chunk);
+          controller.enqueue(message);
+          break;
+        }
 
         case "tool-result": {
           message = appendOrUpdateToolResult(
@@ -50,6 +51,11 @@ export function runResultStream() {
             chunk.toolName,
             chunk.result,
           );
+          controller.enqueue(message);
+          break;
+        }
+        case "step-finish": {
+          message = appendStepFinish(message, chunk);
           controller.enqueue(message);
           break;
         }
@@ -76,10 +82,27 @@ export function runResultStream() {
         }
       }
     },
+    flush(controller) {
+      if (message.status?.type === "running") {
+        const requiresAction = message.content?.at(-1)?.type === "tool-call";
+        message = appendOrUpdateFinish(message, {
+          type: "finish",
+          finishReason: requiresAction ? "tool-calls" : "unknown",
+          usage: {
+            promptTokens: 0,
+            completionTokens: 0,
+          },
+        });
+        controller.enqueue(message);
+      }
+    },
   });
 }
 
-const appendOrUpdateText = (message: ChatModelRunResult, textDelta: string) => {
+const appendOrUpdateText = (
+  message: CoreChatModelRunResult,
+  textDelta: string,
+) => {
   let contentParts = message.content ?? [];
   let contentPart = message.content?.at(-1);
   if (contentPart?.type !== "text") {
@@ -95,40 +118,51 @@ const appendOrUpdateText = (message: ChatModelRunResult, textDelta: string) => {
 };
 
 const appendOrUpdateToolCall = (
-  message: ChatModelRunResult,
+  message: CoreChatModelRunResult,
   toolCallId: string,
   toolName: string,
-  argsText: string,
-) => {
+  argsTextDelta: string,
+): CoreChatModelRunResult => {
   let contentParts = message.content ?? [];
-  let contentPart = message.content?.at(-1);
-  if (
-    contentPart?.type !== "tool-call" ||
-    contentPart.toolCallId !== toolCallId
-  ) {
+  const contentPartIdx = contentParts.findIndex(
+    (c) => c.type === "tool-call" && c.toolCallId === toolCallId,
+  );
+  let contentPart =
+    contentPartIdx === -1
+      ? null
+      : (contentParts[contentPartIdx] as ToolCallContentPart);
+
+  if (contentPart == null) {
     contentPart = {
       type: "tool-call",
       toolCallId,
       toolName,
-      argsText,
-      args: parsePartialJson(argsText),
+      argsText: argsTextDelta,
+      args: parsePartialJson(argsTextDelta),
     };
+    contentParts = [...contentParts, contentPart];
   } else {
-    contentParts = contentParts.slice(0, -1);
+    const argsText = contentPart.argsText + argsTextDelta;
     contentPart = {
       ...contentPart,
       argsText,
       args: parsePartialJson(argsText),
     };
+    contentParts = [
+      ...contentParts.slice(0, contentPartIdx),
+      contentPart,
+      ...contentParts.slice(contentPartIdx + 1),
+    ];
   }
+
   return {
     ...message,
-    content: contentParts.concat([contentPart]),
+    content: contentParts,
   };
 };
 
 const appendOrUpdateToolResult = (
-  message: ChatModelRunResult,
+  message: CoreChatModelRunResult,
   toolCallId: string,
   toolName: string,
   result: any,
@@ -160,29 +194,69 @@ const appendOrUpdateToolResult = (
   };
 };
 
-const appendOrUpdateFinish = (
-  message: ChatModelRunResult,
-  chunk: LanguageModelV1StreamPart & { type: "finish" },
-): ChatModelRunResult => {
-  const { type, ...rest } = chunk;
+const appendData = (
+  message: CoreChatModelRunResult,
+  chunk: ToolResultStreamPart & { type: "data" },
+): CoreChatModelRunResult => {
   return {
     ...message,
-    status: getStatus(chunk),
     metadata: {
       ...message.metadata,
-      roundtrips: [
-        ...(message.metadata?.roundtrips ?? []),
-        {
-          logprobs: rest.logprobs,
-          usage: rest.usage,
-        },
+      unstable_data: [
+        ...(message.metadata?.unstable_data ?? []),
+        ...chunk.data,
       ],
     },
   };
 };
 
-const getStatus = (
+const appendStepFinish = (
+  message: CoreChatModelRunResult,
+  chunk: ToolResultStreamPart & { type: "step-finish" },
+): CoreChatModelRunResult => {
+  const { type, ...rest } = chunk;
+  const steps = [
+    ...(message.metadata?.steps ?? []),
+    {
+      usage: rest.usage,
+    },
+  ];
+  return {
+    ...message,
+    metadata: {
+      ...message.metadata,
+      steps,
+    },
+  };
+};
+
+const appendOrUpdateFinish = (
+  message: CoreChatModelRunResult,
   chunk: LanguageModelV1StreamPart & { type: "finish" },
+): CoreChatModelRunResult => {
+  const { type, ...rest } = chunk;
+
+  const steps = [
+    ...(message.metadata?.steps ?? []),
+    {
+      logprobs: rest.logprobs,
+      usage: rest.usage,
+    },
+  ];
+  return {
+    ...message,
+    status: getStatus(chunk),
+    metadata: {
+      ...message.metadata,
+      steps,
+    },
+  };
+};
+
+const getStatus = (
+  chunk:
+    | (LanguageModelV1StreamPart & { type: "finish" })
+    | (ToolResultStreamPart & { type: "step-finish" }),
 ): MessageStatus => {
   if (chunk.finishReason === "tool-calls") {
     return {
@@ -206,8 +280,8 @@ const getStatus = (
 };
 
 const appendOrUpdateCancel = (
-  message: ChatModelRunResult,
-): ChatModelRunResult => {
+  message: CoreChatModelRunResult,
+): CoreChatModelRunResult => {
   return {
     ...message,
     status: {

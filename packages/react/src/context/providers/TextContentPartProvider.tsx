@@ -14,10 +14,12 @@ import {
   ContentPartState,
 } from "../../api/ContentPartRuntime";
 
-type TextContentPartProviderProps = {
-  text: string;
-  isRunning?: boolean | undefined;
-};
+export namespace TextContentPartProvider {
+  export type Props = PropsWithChildren<{
+    text: string;
+    isRunning?: boolean | undefined;
+  }>;
+}
 
 const COMPLETE_STATUS: ContentPartStatus = {
   type: "complete",
@@ -27,20 +29,31 @@ const RUNNING_STATUS: ContentPartStatus = {
   type: "running",
 };
 
-export const TextContentPartProvider: FC<
-  PropsWithChildren<TextContentPartProviderProps>
-> = ({ children, text, isRunning }) => {
+export const TextContentPartProvider: FC<TextContentPartProvider.Props> = ({
+  children,
+  text,
+  isRunning,
+}) => {
   const [context] = useState<ContentPartContextValue>(() => {
-    const useContentPartRuntime = create(
-      // TODO
-      () => new ContentPartRuntimeImpl(null as any, null as any, null as any),
-    );
     const useContentPart = create<ContentPartState>(() => ({
       status: isRunning ? RUNNING_STATUS : COMPLETE_STATUS,
-      part: { type: "text", text },
       type: "text",
       text,
     }));
+
+    const useContentPartRuntime = create(
+      () =>
+        new ContentPartRuntimeImpl({
+          path: {
+            ref: "text",
+            threadSelector: { type: "main" },
+            messageSelector: { type: "messageId", messageId: "" },
+            contentPartSelector: { type: "index", index: 0 },
+          },
+          getState: useContentPart.getState,
+          subscribe: useContentPart.subscribe,
+        }),
+    );
 
     return { useContentPartRuntime, useContentPart };
   });
@@ -60,7 +73,6 @@ export const TextContentPartProvider: FC<
       {
         type: "text",
         text,
-        part: { type: "text", text },
         status: targetStatus,
       } satisfies ContentPartState,
       true,

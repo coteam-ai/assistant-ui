@@ -6,7 +6,7 @@ import { MessageUtilsState } from "../stores/MessageUtils";
 import { createContextHook } from "./utils/createContextHook";
 import { createContextStoreHook } from "./utils/createContextStoreHook";
 import { UseBoundStore } from "zustand";
-import { MessageRuntime } from "../../api";
+import { MessageRuntime } from "../../api/MessageRuntime";
 import { MessageState } from "../../api/MessageRuntime";
 import { EditComposerState } from "../../api/ComposerRuntime";
 
@@ -38,7 +38,7 @@ export function useMessageRuntime(options?: {
   return context.useMessageRuntime();
 }
 
-export const { useMessage, useMessageStore } = createContextStoreHook(
+export const { useMessage } = createContextStoreHook(
   useMessageContext,
   "useMessage",
 );
@@ -48,7 +48,7 @@ export const { useMessageUtils, useMessageUtilsStore } = createContextStoreHook(
   "useMessageUtils",
 );
 
-export const { useEditComposer, useEditComposerStore } = createContextStoreHook(
+export const { useEditComposer } = createContextStoreHook(
   useMessageContext,
   "useEditComposer",
 );

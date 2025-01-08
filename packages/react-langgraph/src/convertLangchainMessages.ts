@@ -3,6 +3,38 @@
 import { useExternalMessageConverter } from "@assistant-ui/react";
 import { LangChainMessage } from "./types";
 import { ToolCallContentPart } from "@assistant-ui/react";
+import { ThreadUserMessage } from "@assistant-ui/react";
+
+const contentToParts = (
+  content: LangChainMessage["content"],
+) => {
+  if (typeof content === "string")
+    return [{ type: "text" as const, text: content }];
+  return content
+    .map((part): ThreadUserMessage["content"][number] | null => {
+      const type = part.type;
+      switch (type) {
+        case "text":
+          return { type: "text", text: part.text };
+        case "image_url":
+          if (typeof part.image_url === "string") {
+            return { type: "image", image: part.image_url };
+          } else {
+            return {
+              type: "image",
+              image: part.image_url.url,
+            };
+          }
+
+        case "tool_use":
+          return null;
+        default:
+          const _exhaustiveCheck: never = type;
+          throw new Error(`Unknown content part type: ${_exhaustiveCheck}`);
+      }
+    })
+    .filter((a) => a !== null);
+};
 
 export const convertLangchainMessages: useExternalMessageConverter.Callback<
   LangChainMessage
@@ -18,17 +50,14 @@ export const convertLangchainMessages: useExternalMessageConverter.Callback<
       return {
         role: "user",
         id: message.id,
-        content: [{ type: "text", text: message.content }],
+        content: contentToParts(message.content),
       };
     case "ai":
       return {
         role: "assistant",
         id: message.id,
         content: [
-          {
-            type: "text",
-            text: message.content,
-          },
+          ...contentToParts(message.content),
           ...(message.tool_calls?.map(
             (chunk): ToolCallContentPart => ({
               type: "tool-call",

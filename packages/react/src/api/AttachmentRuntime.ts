@@ -7,29 +7,18 @@ import {
   PendingAttachment,
   Unsubscribe,
 } from "../types";
+import { AttachmentRuntimePath } from "./RuntimePathTypes";
 
 type MessageAttachmentState = CompleteAttachment & {
-  source: "message";
-  /**
-   * @deprecated You can directly access content part fields in the state. Replace `.attachment.type` with `.type` etc. This will be removed in 0.6.0.
-   */
-  attachment: CompleteAttachment;
+  readonly source: "message";
 };
 
 type ThreadComposerAttachmentState = PendingAttachment & {
-  source: "thread-composer";
-  /**
-   * @deprecated You can directly access content part fields in the state. Replace `.attachment.type` with `.type` etc. This will be removed in 0.6.0.
-   */
-  attachment: PendingAttachment;
+  readonly source: "thread-composer";
 };
 
 type EditComposerAttachmentState = Attachment & {
-  source: "edit-composer";
-  /**
-   * @deprecated You can directly access content part fields in the state. Replace `.attachment.type` with `.type` etc. This will be removed in 0.6.0.
-   */
-  attachment: Attachment;
+  readonly source: "edit-composer";
 };
 
 export type AttachmentState =
@@ -38,13 +27,17 @@ export type AttachmentState =
   | MessageAttachmentState;
 
 type AttachmentSnapshotBinding<Source extends AttachmentRuntimeSource> =
-  SubscribableWithState<AttachmentState & { source: Source }>;
+  SubscribableWithState<
+    AttachmentState & { source: Source },
+    AttachmentRuntimePath & { attachmentSource: Source }
+  >;
 
 type AttachmentRuntimeSource = AttachmentState["source"];
 
 export type AttachmentRuntime<
   TSource extends AttachmentRuntimeSource = AttachmentRuntimeSource,
 > = {
+  readonly path: AttachmentRuntimePath & { attachmentSource: TSource };
   readonly source: TSource;
   getState(): AttachmentState & { source: TSource };
   remove(): Promise<void>;
@@ -55,6 +48,10 @@ export abstract class AttachmentRuntimeImpl<
   Source extends AttachmentRuntimeSource = AttachmentRuntimeSource,
 > implements AttachmentRuntime
 {
+  public get path() {
+    return this._core.path;
+  }
+
   public abstract get source(): Source;
 
   constructor(private _core: AttachmentSnapshotBinding<Source>) {}
