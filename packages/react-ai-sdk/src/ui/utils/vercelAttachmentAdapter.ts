@@ -1,5 +1,5 @@
 import { AttachmentAdapter } from "@assistant-ui/react";
-import { generateId } from "ai";
+import { generateId } from "@ai-sdk/ui-utils";
 
 export const vercelAttachmentAdapter: AttachmentAdapter = {
   accept:
@@ -10,13 +10,16 @@ export const vercelAttachmentAdapter: AttachmentAdapter = {
       type: "file",
       name: file.name,
       file,
+      contentType: file.type,
       content: [],
+      status: { type: "requires-action", reason: "composer-send" },
     };
   },
   async send(attachment) {
     // noop
     return {
       ...attachment,
+      status: { type: "complete" },
       content: [],
     };
   },

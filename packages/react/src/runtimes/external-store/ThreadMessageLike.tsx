@@ -1,4 +1,3 @@
-import { MessageAttachment } from "../../context/stores/Attachment";
 import {
   MessageStatus,
   TextContentPart,
@@ -11,16 +10,22 @@ import {
   ThreadUserContentPart,
   ThreadUserMessage,
   ThreadSystemMessage,
+  CompleteAttachment,
 } from "../../types";
-import { CoreToolCallContentPart } from "../../types/AssistantTypes";
+import {
+  CoreToolCallContentPart,
+  ThreadStep,
+  Unstable_AudioContentPart,
+} from "../../types/AssistantTypes";
 
 export type ThreadMessageLike = {
   role: "assistant" | "user" | "system";
   content:
     | string
-    | (
+    | readonly (
         | TextContentPart
         | ImageContentPart
+        | Unstable_AudioContentPart
         | ToolCallContentPart<any, any>
         | CoreToolCallContentPart<any, any>
         | UIContentPart
@@ -28,7 +33,12 @@ export type ThreadMessageLike = {
   id?: string | undefined;
   createdAt?: Date | undefined;
   status?: MessageStatus | undefined;
-  attachments?: MessageAttachment[] | undefined;
+  attachments?: readonly CompleteAttachment[] | undefined;
+  metadata?: {
+    unstable_data?: readonly Record<string, unknown>[] | undefined;
+    steps?: readonly ThreadStep[] | undefined;
+    custom?: Record<string, unknown> | undefined;
+  };
 };
 
 export const fromThreadMessageLike = (
@@ -36,7 +46,7 @@ export const fromThreadMessageLike = (
   fallbackId: string,
   fallbackStatus: MessageStatus,
 ): ThreadMessage => {
-  const { role, id, createdAt, attachments, status } = like;
+  const { role, id, createdAt, attachments, status, metadata } = like;
   const common = {
     id: id ?? fallbackId,
     createdAt: createdAt ?? new Date(),
@@ -48,10 +58,13 @@ export const fromThreadMessageLike = (
       : like.content;
 
   if (role !== "user" && attachments)
-    throw new Error("Attachments are only supported for user messages");
-  // TODO add in 0.6
-  // if (role !== "assistant" && status)
-  //   throw new Error("Status is only supported for assistant messages");
+    throw new Error("attachments are only supported for user messages");
+
+  if (role !== "assistant" && status)
+    throw new Error("status is only supported for assistant messages");
+
+  if (role !== "assistant" && metadata?.steps)
+    throw new Error("metadata.steps is only supported for assistant messages");
 
   switch (role) {
     case "assistant":
@@ -78,13 +91,18 @@ export const fromThreadMessageLike = (
               }
 
               default: {
-                const unhandledType: "image" = type;
+                const unhandledType: "image" | "audio" = type;
                 throw new Error(`Unknown content part type: ${unhandledType}`);
               }
             }
           })
           .filter((c) => !!c),
         status: status ?? fallbackStatus,
+        metadata: {
+          unstable_data: metadata?.unstable_data ?? [],
+          custom: metadata?.custom ?? {},
+          steps: metadata?.steps ?? [],
+        },
       } satisfies ThreadAssistantMessage;
 
     case "user":
@@ -97,6 +115,7 @@ export const fromThreadMessageLike = (
             case "text":
             case "ui":
             case "image":
+            case "audio":
               return part;
 
             default: {
@@ -106,6 +125,9 @@ export const fromThreadMessageLike = (
           }
         }),
         attachments: attachments ?? [],
+        metadata: {
+          custom: metadata?.custom ?? {},
+        },
       } satisfies ThreadUserMessage;
 
     case "system":
@@ -118,6 +140,9 @@ export const fromThreadMessageLike = (
         ...common,
         role,
         content: content as [TextContentPart],
+        metadata: {
+          custom: metadata?.custom ?? {},
+        },
       } satisfies ThreadSystemMessage;
 
     default: {

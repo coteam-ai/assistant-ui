@@ -1,11 +1,10 @@
 "use client";
 
 import { ChangeEvent, FC, PropsWithChildren, useState } from "react";
-import { Tool, useAssistantActionsStore } from "@assistant-ui/react";
+import { Tool, useAssistantRuntime } from "@assistant-ui/react";
 import { PayloadEditorButton } from "../../payload-editor-button";
 import { Thread } from "./thread";
 import { Button } from "../button";
-
 import {
   Dialog,
   DialogContent,
@@ -131,7 +130,7 @@ const DEFAULT_GET_WEATHER_TOOL: Tool = {
 
 const ToolManager: FC = () => {
   const { useModelConfig } = usePlaygroundRuntime();
-  const tools = useModelConfig((c) => c.tools ?? {});
+  const tools = useModelConfig((c) => c.tools) ?? {};
 
   return (
     <div className="flex flex-col gap-2">
@@ -187,7 +186,7 @@ const ToolManager: FC = () => {
 
 const APIKeyInput: FC = () => {
   const { useModelConfig } = usePlaygroundRuntime();
-  const value = useModelConfig((c) => c.config?.apiKey ?? "");
+  const value = useModelConfig((c) => c.config?.apiKey) ?? "";
   const setValue = (e: ChangeEvent<HTMLInputElement>) => {
     useModelConfig.setState({
       config: { ...useModelConfig.getState().config, apiKey: e.target.value },
@@ -215,7 +214,7 @@ const ModelSelector: FC<ModelSelectorProps> = ({
   models = ["gpt-4", "gpt-4o"],
 }) => {
   const { useModelConfig } = usePlaygroundRuntime();
-  const value = useModelConfig((c) => c.config?.modelName ?? "");
+  const value = useModelConfig((c) => c.config?.modelName) ?? "";
   const setValue = (value: string) => {
     useModelConfig.setState({
       config: {
@@ -246,7 +245,7 @@ const ModelSelector: FC<ModelSelectorProps> = ({
 
 const TemperatureSlider: FC = () => {
   const { useModelConfig } = usePlaygroundRuntime();
-  const values = useModelConfig((c) => [c.callSettings?.temperature ?? 1]);
+  const value = useModelConfig((c) => c.callSettings?.temperature) ?? 1;
   const setValues = ([value]: number[]) => {
     useModelConfig.setState({
       callSettings: {
@@ -265,7 +264,7 @@ const TemperatureSlider: FC = () => {
       <div className="flex justify-between">
         <label>Temperature</label>
         <Input
-          value={values[0]!.toFixed(2)}
+          value={value!.toFixed(2)}
           onChange={setValue}
           className="inline h-6 w-16 py-0"
         />
@@ -274,7 +273,7 @@ const TemperatureSlider: FC = () => {
         min={0}
         max={2}
         step={0.01}
-        value={values}
+        value={[value]}
         onValueChange={setValues}
       />
     </div>
@@ -283,7 +282,7 @@ const TemperatureSlider: FC = () => {
 
 const MaxTokensSlider: FC = () => {
   const { useModelConfig } = usePlaygroundRuntime();
-  const values = useModelConfig((c) => [c.callSettings?.maxTokens ?? 256]);
+  const value = useModelConfig((c) => c.callSettings?.maxTokens) ?? 256;
   const setValues = ([value]: number[]) => {
     useModelConfig.setState({
       callSettings: {
@@ -302,7 +301,7 @@ const MaxTokensSlider: FC = () => {
       <div className="flex justify-between">
         <label>Max Tokens</label>
         <Input
-          value={values[0]!.toString()}
+          value={value!.toString()}
           onChange={setValue}
           className="inline h-6 w-16 py-0"
         />
@@ -311,7 +310,7 @@ const MaxTokensSlider: FC = () => {
         min={1}
         max={4095}
         step={1}
-        value={values}
+        value={[value]}
         onValueChange={setValues}
       />
     </div>
@@ -322,9 +321,9 @@ const Sidebar: FC<AssistantPlaygroundProps> = ({
   modelSelector,
   apiKey = true,
 }) => {
-  const assistantActionsStore = useAssistantActionsStore();
+  const assistantRuntime = useAssistantRuntime();
   const handleReset = () => {
-    assistantActionsStore.getState().switchToNewThread();
+    assistantRuntime.switchToNewThread();
   };
 
   return (
@@ -369,7 +368,7 @@ export const AssistantPlayground: FC<AssistantPlaygroundProps> = ({
   apiKey,
 }) => {
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="bg-aui-background text-aui-foreground [&_*]:border-aui-border flex h-full overflow-hidden">
       <div className="flex flex-grow flex-col">
         <Thread />
       </div>

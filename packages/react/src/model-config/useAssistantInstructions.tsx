@@ -1,16 +1,34 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAssistantActionsStore } from "../context";
+import { useAssistantRuntime } from "../context";
 
-export const useAssistantInstructions = (instruction: string) => {
-  const actionsStore = useAssistantActionsStore();
+type AssistantInstructionsConfig = {
+  disabled?: boolean | undefined;
+  instruction: string;
+};
+
+const getInstructions = (
+  instruction: string | AssistantInstructionsConfig,
+): AssistantInstructionsConfig => {
+  if (typeof instruction === "string") return { instruction };
+  return instruction;
+};
+
+export const useAssistantInstructions = (
+  config: string | AssistantInstructionsConfig,
+) => {
+  const { instruction, disabled = false } = getInstructions(config);
+  const assistantRuntime = useAssistantRuntime();
+
   useEffect(() => {
+    if (disabled) return;
+
     const config = {
       system: instruction,
     };
-    return actionsStore
-      .getState()
-      .registerModelConfigProvider({ getModelConfig: () => config });
-  }, [actionsStore, instruction]);
+    return assistantRuntime.registerModelConfigProvider({
+      getModelConfig: () => config,
+    });
+  }, [assistantRuntime, instruction]);
 };

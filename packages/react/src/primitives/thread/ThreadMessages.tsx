@@ -1,38 +1,40 @@
 "use client";
 
-import { type ComponentType, type FC, memo } from "react";
-import { useThreadMessages } from "../../context/react/ThreadContext";
-import { MessageProvider } from "../../context/providers/MessageProvider";
+import { type ComponentType, type FC, memo, useMemo } from "react";
+import { useThread, useThreadRuntime } from "../../context/react/ThreadContext";
+import { MessageRuntimeProvider } from "../../context/providers/MessageRuntimeProvider";
 import { useEditComposer, useMessage } from "../../context";
 import { ThreadMessage as ThreadMessageType } from "../../types";
 
-export type ThreadPrimitiveMessagesProps = {
-  components:
-    | {
-        Message: ComponentType;
-        EditComposer?: ComponentType | undefined;
-        UserEditComposer?: ComponentType | undefined;
-        AssistantEditComposer?: ComponentType | undefined;
-        SystemEditComposer?: ComponentType | undefined;
-        UserMessage?: ComponentType | undefined;
-        AssistantMessage?: ComponentType | undefined;
-        SystemMessage?: ComponentType | undefined;
-      }
-    | {
-        Message?: ComponentType | undefined;
-        EditComposer?: ComponentType | undefined;
-        UserEditComposer?: ComponentType | undefined;
-        AssistantEditComposer?: ComponentType | undefined;
-        SystemEditComposer?: ComponentType | undefined;
-        UserMessage: ComponentType;
-        AssistantMessage: ComponentType;
-        SystemMessage?: ComponentType | undefined;
-      };
-};
+export namespace ThreadPrimitiveMessages {
+  export type Props = {
+    components:
+      | {
+          Message: ComponentType;
+          EditComposer?: ComponentType | undefined;
+          UserEditComposer?: ComponentType | undefined;
+          AssistantEditComposer?: ComponentType | undefined;
+          SystemEditComposer?: ComponentType | undefined;
+          UserMessage?: ComponentType | undefined;
+          AssistantMessage?: ComponentType | undefined;
+          SystemMessage?: ComponentType | undefined;
+        }
+      | {
+          Message?: ComponentType | undefined;
+          EditComposer?: ComponentType | undefined;
+          UserEditComposer?: ComponentType | undefined;
+          AssistantEditComposer?: ComponentType | undefined;
+          SystemEditComposer?: ComponentType | undefined;
+          UserMessage: ComponentType;
+          AssistantMessage: ComponentType;
+          SystemMessage?: ComponentType | undefined;
+        };
+  };
+}
 
 const isComponentsSame = (
-  prev: ThreadPrimitiveMessagesProps["components"],
-  next: ThreadPrimitiveMessagesProps["components"],
+  prev: ThreadPrimitiveMessages.Props["components"],
+  next: ThreadPrimitiveMessages.Props["components"],
 ) => {
   return (
     prev.Message === next.Message &&
@@ -49,7 +51,7 @@ const isComponentsSame = (
 const DEFAULT_SYSTEM_MESSAGE = () => null;
 
 const getComponent = (
-  components: ThreadPrimitiveMessagesProps["components"],
+  components: ThreadPrimitiveMessages.Props["components"],
   role: ThreadMessageType["role"],
   isEditing: boolean,
 ) => {
@@ -96,13 +98,13 @@ const getComponent = (
 };
 
 type ThreadMessageComponentProps = {
-  components: ThreadPrimitiveMessagesProps["components"];
+  components: ThreadPrimitiveMessages.Props["components"];
 };
 
 const ThreadMessageComponent: FC<ThreadMessageComponentProps> = ({
   components,
 }) => {
-  const role = useMessage((m) => m.message.role);
+  const role = useMessage((m) => m.role);
   const isEditing = useEditComposer((c) => c.isEditing);
   const Component = getComponent(components, role, isEditing);
 
@@ -111,17 +113,23 @@ const ThreadMessageComponent: FC<ThreadMessageComponentProps> = ({
 
 type ThreadMessageProps = {
   messageIndex: number;
-  components: ThreadPrimitiveMessagesProps["components"];
+  components: ThreadPrimitiveMessages.Props["components"];
 };
 
 const ThreadMessageImpl: FC<ThreadMessageProps> = ({
   messageIndex,
   components,
 }) => {
+  const threadRuntime = useThreadRuntime();
+  const runtime = useMemo(
+    () => threadRuntime.getMesssageByIndex(messageIndex),
+    [threadRuntime, messageIndex],
+  );
+
   return (
-    <MessageProvider messageIndex={messageIndex}>
+    <MessageRuntimeProvider runtime={runtime}>
       <ThreadMessageComponent components={components} />
-    </MessageProvider>
+    </MessageRuntimeProvider>
   );
 };
 
@@ -132,10 +140,10 @@ const ThreadMessage = memo(
     isComponentsSame(prev.components, next.components),
 );
 
-export const ThreadPrimitiveMessagesImpl: FC<ThreadPrimitiveMessagesProps> = ({
+export const ThreadPrimitiveMessagesImpl: FC<ThreadPrimitiveMessages.Props> = ({
   components,
 }) => {
-  const messagesLength = useThreadMessages((t) => t.length);
+  const messagesLength = useThread((t) => t.messages.length);
   if (messagesLength === 0) return null;
 
   return Array.from({ length: messagesLength }, (_, index) => (

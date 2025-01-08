@@ -2,14 +2,22 @@
 
 import { create } from "zustand";
 import type { ToolCallContentPartComponent } from "../../types/ContentPartComponentTypes";
+import { Unsubscribe } from "../../types";
 
-export type AssistantToolUIsState = Readonly<{
+export type AssistantToolUIsState = {
+  /**
+   * Get the tool UI configured for a given tool name.
+   */
   getToolUI: (toolName: string) => ToolCallContentPartComponent | null;
+
+  /**
+   * Registers a tool UI for a given tool name. Returns an unsubscribe function to remove the tool UI.
+   */
   setToolUI: (
     toolName: string,
     render: ToolCallContentPartComponent,
-  ) => () => void;
-}>;
+  ) => Unsubscribe;
+};
 
 export const makeAssistantToolUIsStore = () =>
   create<AssistantToolUIsState>((set) => {

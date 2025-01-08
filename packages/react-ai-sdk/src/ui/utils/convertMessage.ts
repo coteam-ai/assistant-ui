@@ -1,8 +1,8 @@
-import { Message } from "ai";
+import { Message } from "@ai-sdk/ui-utils";
 import { useExternalMessageConverter } from "@assistant-ui/react";
 import { ToolCallContentPart } from "@assistant-ui/react";
 import { TextContentPart } from "@assistant-ui/react";
-import { MessageAttachment } from "../../../../react/src/context/stores/Attachment";
+import { CompleteAttachment } from "@assistant-ui/react";
 
 export const convertMessage: useExternalMessageConverter.Callback<Message> = (
   message,
@@ -22,7 +22,9 @@ export const convertMessage: useExternalMessageConverter.Callback<Message> = (
               type: "file",
               name: attachment.name ?? attachment.url,
               content: [],
-            }) satisfies MessageAttachment,
+              contentType: attachment.contentType ?? "unknown/unknown",
+              status: { type: "complete" },
+            }) satisfies CompleteAttachment,
         ),
       };
 
@@ -91,6 +93,7 @@ export const convertMessage: useExternalMessageConverter.Callback<Message> = (
       } else if (data.type === "tool-result") {
         return {
           role: "tool",
+          id: message.id,
           toolCallId: data.toolCallId,
           result: data.result,
         };

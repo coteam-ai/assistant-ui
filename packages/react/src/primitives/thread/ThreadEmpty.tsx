@@ -1,13 +1,13 @@
 "use client";
 
-import type { FC, ReactNode } from "react";
-import { useThreadEmpty } from "../../primitive-hooks";
+import type { FC, PropsWithChildren } from "react";
+import { useThreadEmpty } from "../../primitive-hooks/thread/useThreadEmpty";
 
-export type ThreadPrimitiveEmptyProps = {
-  children: ReactNode;
-};
+export namespace ThreadPrimitiveEmpty {
+  export type Props = PropsWithChildren;
+}
 
-export const ThreadPrimitiveEmpty: FC<ThreadPrimitiveEmptyProps> = ({
+export const ThreadPrimitiveEmpty: FC<ThreadPrimitiveEmpty.Props> = ({
   children,
 }) => {
   const empty = useThreadEmpty();

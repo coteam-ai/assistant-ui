@@ -5,15 +5,14 @@ import { notFound } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { EditIcon } from "lucide-react";
-import { useMDXComponents } from "@/mdx-components";
+import { getMDXComponents } from "@/mdx-components";
 
-export default async function Page({
-  params,
-}: {
-  params: { slug?: string[] };
+export default async function Page(props: {
+  params: Promise<{ slug?: string[] }>;
 }) {
+  const params = await props.params;
   const page = getPage(params.slug ?? []);
-  const mdxComponents = useMDXComponents({});
+  const mdxComponents = getMDXComponents({});
 
   if (page == null) {
     notFound();
@@ -61,7 +60,10 @@ export async function generateStaticParams() {
     }));
 }
 
-export function generateMetadata({ params }: { params: { slug?: string[] } }) {
+export async function generateMetadata(props: {
+  params: Promise<{ slug?: string[] }>;
+}) {
+  const params = await props.params;
   const page = getPage(params.slug ?? []);
 
   if (page == null) notFound();

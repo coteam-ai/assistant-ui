@@ -96,14 +96,14 @@ const FfmpegTool: FC<{ file: File }> = ({ file }) => {
       };
     },
     render: function RenderFfmpeg({
-      part: {
-        args: { command, outputFileName, outputMimeType },
-        result: { success } = {},
-      },
+      args: { command, outputFileName, outputMimeType },
+      result: { success } = {},
     }) {
       const handleDownload = async () => {
         const ffmpeg = ffmpegRef.current;
-        const data = (await ffmpeg.readFile(outputFileName)) as any;
+        const data = (await ffmpeg.readFile(
+          outputFileName,
+        )) as Uint8Array<ArrayBuffer>;
         window.open(
           URL.createObjectURL(
             new Blob([data.buffer], { type: outputMimeType }),

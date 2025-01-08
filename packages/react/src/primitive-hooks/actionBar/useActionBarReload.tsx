@@ -1,36 +1,20 @@
 import { useCallback } from "react";
-import { useMessageStore } from "../../context/react/MessageContext";
-import {
-  useThreadActionsStore,
-  useThreadComposerStore,
-  useThreadStore,
-  useThreadViewportStore,
-} from "../../context/react/ThreadContext";
+import { useMessageRuntime } from "../../context/react/MessageContext";
+import { useThreadRuntime } from "../../context/react/ThreadContext";
 import { useCombinedStore } from "../../utils/combined/useCombinedStore";
 
 export const useActionBarReload = () => {
-  const messageStore = useMessageStore();
-  const threadStore = useThreadStore();
-  const threadActionsStore = useThreadActionsStore();
-  const threadComposerStore = useThreadComposerStore();
-  const threadViewportStore = useThreadViewportStore();
+  const messageRuntime = useMessageRuntime();
+  const threadRuntime = useThreadRuntime();
 
   const disabled = useCombinedStore(
-    [threadStore, messageStore],
-    (t, m) => t.isRunning || t.isDisabled || m.message.role !== "assistant",
+    [threadRuntime, messageRuntime],
+    (t, m) => t.isRunning || t.isDisabled || m.role !== "assistant",
   );
 
   const callback = useCallback(() => {
-    const { parentId } = messageStore.getState();
-    threadActionsStore.getState().startRun(parentId);
-    threadViewportStore.getState().scrollToBottom();
-    threadComposerStore.getState().focus();
-  }, [
-    threadActionsStore,
-    threadComposerStore,
-    threadViewportStore,
-    messageStore,
-  ]);
+    messageRuntime.reload();
+  }, [messageRuntime]);
 
   if (disabled) return null;
   return callback;

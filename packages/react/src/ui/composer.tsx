@@ -5,15 +5,11 @@ import { ComponentPropsWithoutRef, forwardRef, type FC } from "react";
 import { PaperclipIcon, SendHorizontalIcon } from "lucide-react";
 import { withDefaults } from "./utils/withDefaults";
 import { useThreadConfig } from "./thread-config";
-import {
-  TooltipIconButton,
-  TooltipIconButtonProps,
-} from "./base/tooltip-icon-button";
+import { TooltipIconButton } from "./base/tooltip-icon-button";
 import { CircleStopIcon } from "./base/CircleStopIcon";
 import { ComposerPrimitive, ThreadPrimitive } from "../primitives";
 import { useThread } from "../context/react/ThreadContext";
-import ComposerAttachment from "./composer-attachment";
-import { ComposerPrimitiveAttachmentsProps } from "../primitives/composer/ComposerAttachments";
+import Attachment from "./attachment-ui";
 
 const useAllowAttachments = (ensureCapability = false) => {
   const { composer: { allowAttachments = true } = {} } = useThreadConfig();
@@ -47,10 +43,12 @@ const ComposerInputStyled = withDefaults(ComposerPrimitive.Input, {
   className: "aui-composer-input",
 });
 
-export type ComposerInputProps = ComponentPropsWithoutRef<
-  typeof ComposerInputStyled
->;
-const ComposerInput = forwardRef<HTMLTextAreaElement, ComposerInputProps>(
+namespace ComposerInput {
+  export type Element = HTMLTextAreaElement;
+  export type Props = ComponentPropsWithoutRef<typeof ComposerInputStyled>;
+}
+
+const ComposerInput = forwardRef<ComposerInput.Element, ComposerInput.Props>(
   (props, ref) => {
     const {
       strings: {
@@ -69,15 +67,17 @@ const ComposerAttachmentsContainer = withDefaults("div", {
   className: "aui-composer-attachments",
 });
 
-type ComposerAttachmentsProps = Partial<ComposerPrimitiveAttachmentsProps>;
+namespace ComposerAttachments {
+  export type Props = Partial<ComposerPrimitive.Attachments.Props>;
+}
 
-const ComposerAttachments: FC<ComposerAttachmentsProps> = ({ components }) => {
+const ComposerAttachments: FC<ComposerAttachments.Props> = ({ components }) => {
   return (
     <ComposerAttachmentsContainer>
       <ComposerPrimitive.Attachments
         components={{
           ...components,
-          Attachment: components?.Attachment ?? ComposerAttachment,
+          Attachment: components?.Attachment ?? Attachment,
         }}
       />
     </ComposerAttachmentsContainer>
@@ -89,9 +89,14 @@ const ComposerAttachButton = withDefaults(TooltipIconButton, {
   className: "aui-composer-attach",
 });
 
+namespace ComposerAddAttachment {
+  export type Element = HTMLButtonElement;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
 const ComposerAddAttachment = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
+  ComposerAddAttachment.Element,
+  ComposerAddAttachment.Props
 >((props, ref) => {
   const {
     strings: {
@@ -142,21 +147,25 @@ const ComposerSendButton = withDefaults(TooltipIconButton, {
   className: "aui-composer-send",
 });
 
-const ComposerSend = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
->((props, ref) => {
-  const {
-    strings: { composer: { send: { tooltip = "Send" } = {} } = {} } = {},
-  } = useThreadConfig();
-  return (
-    <ComposerPrimitive.Send asChild>
-      <ComposerSendButton tooltip={tooltip} {...props} ref={ref}>
-        {props.children ?? <SendHorizontalIcon />}
-      </ComposerSendButton>
-    </ComposerPrimitive.Send>
-  );
-});
+namespace ComposerSend {
+  export type Element = HTMLButtonElement;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
+const ComposerSend = forwardRef<ComposerSend.Element, ComposerSend.Props>(
+  (props, ref) => {
+    const {
+      strings: { composer: { send: { tooltip = "Send" } = {} } = {} } = {},
+    } = useThreadConfig();
+    return (
+      <ComposerPrimitive.Send asChild>
+        <ComposerSendButton tooltip={tooltip} {...props} ref={ref}>
+          {props.children ?? <SendHorizontalIcon />}
+        </ComposerSendButton>
+      </ComposerPrimitive.Send>
+    );
+  },
+);
 
 ComposerSend.displayName = "ComposerSend";
 
@@ -165,21 +174,25 @@ const ComposerCancelButton = withDefaults(TooltipIconButton, {
   className: "aui-composer-cancel",
 });
 
-const ComposerCancel = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
->((props, ref) => {
-  const {
-    strings: { composer: { cancel: { tooltip = "Cancel" } = {} } = {} } = {},
-  } = useThreadConfig();
-  return (
-    <ComposerPrimitive.Cancel asChild>
-      <ComposerCancelButton tooltip={tooltip} {...props} ref={ref}>
-        {props.children ?? <CircleStopIcon />}
-      </ComposerCancelButton>
-    </ComposerPrimitive.Cancel>
-  );
-});
+namespace ComposerCancel {
+  export type Element = HTMLButtonElement;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
+const ComposerCancel = forwardRef<ComposerCancel.Element, ComposerCancel.Props>(
+  (props, ref) => {
+    const {
+      strings: { composer: { cancel: { tooltip = "Cancel" } = {} } = {} } = {},
+    } = useThreadConfig();
+    return (
+      <ComposerPrimitive.Cancel asChild>
+        <ComposerCancelButton tooltip={tooltip} {...props} ref={ref}>
+          {props.children ?? <CircleStopIcon />}
+        </ComposerCancelButton>
+      </ComposerPrimitive.Cancel>
+    );
+  },
+);
 
 ComposerCancel.displayName = "ComposerCancel";
 

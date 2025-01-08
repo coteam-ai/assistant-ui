@@ -12,8 +12,11 @@ import { LanguageModelV1FunctionTool } from "@ai-sdk/provider";
 
 export const requestOptionsFromOpenAI = (
   params: OpenAI.ChatCompletionCreateParams,
+  options?: {
+    strict?: boolean | undefined;
+  },
 ): EdgeRuntimeRequestOptions => {
-  const messages = threadMessagesFromOpenAI(params.messages);
+  const messages = threadMessagesFromOpenAI(params.messages, options);
   let tools: LanguageModelV1FunctionTool[] | undefined =
     params.tools?.map(
       (t) =>
@@ -74,14 +77,17 @@ export const requestOptionsToOpenAI = ({
 
 const threadMessagesFromOpenAI = (
   messages: OpenAI.ChatCompletionMessageParam[],
+  options?: {
+    strict?: boolean | undefined;
+  },
 ) => {
-  const lms = fromOpenAIMessages(messages);
-  return fromLanguageModelMessages(lms, { mergeRoundtrips: false });
+  const lms = fromOpenAIMessages(messages, options);
+  return fromLanguageModelMessages(lms, { mergeSteps: false });
 };
 
 const threadMessagesToOpenAI = (
   system: string | undefined,
-  messages: CoreMessage[],
+  messages: readonly CoreMessage[],
 ) => {
   const systemMessage: CoreMessage | undefined = system
     ? { role: "system", content: [{ type: "text", text: system }] }

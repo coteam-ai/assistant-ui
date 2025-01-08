@@ -24,6 +24,14 @@ const ImageContentPartSchema = z.object({
   image: z.string(),
 });
 
+const Unstable_AudioContentPart = z.object({
+  type: z.literal("audio"),
+  audio: z.object({
+    data: z.string(),
+    format: z.union([z.literal("mp3"), z.literal("wav")]),
+  }),
+});
+
 const CoreToolCallContentPartSchema = z.object({
   type: z.literal("tool-call"),
   toolCallId: z.string(),
@@ -42,9 +50,11 @@ const CoreUserMessageSchema = z.object({
       z.discriminatedUnion("type", [
         TextContentPartSchema,
         ImageContentPartSchema,
+        Unstable_AudioContentPart,
       ]),
     )
-    .min(1),
+    .min(1)
+    .readonly(),
 });
 
 const CoreAssistantMessageSchema = z.object({
@@ -57,13 +67,14 @@ const CoreAssistantMessageSchema = z.object({
         CoreToolCallContentPartSchema,
       ]),
     )
-    .min(1),
+    .min(1)
+    .readonly(),
 });
 
 const CoreSystemMessageSchema = z.object({
   id: z.string().optional(),
   role: z.literal("system"),
-  content: z.tuple([TextContentPartSchema]),
+  content: z.tuple([TextContentPartSchema]).readonly(),
 });
 
 const CoreMessageSchema = z.discriminatedUnion("role", [
@@ -75,8 +86,14 @@ const CoreMessageSchema = z.discriminatedUnion("role", [
 export const EdgeRuntimeRequestOptionsSchema = z
   .object({
     system: z.string().optional(),
-    messages: z.array(CoreMessageSchema).min(1),
-    tools: z.array(LanguageModelV1FunctionToolSchema).optional(),
+    messages: z.array(CoreMessageSchema).min(1).readonly(),
+    runConfig: z
+      .object({
+        custom: z.record(z.unknown()).optional(),
+      })
+      .optional(),
+    tools: z.array(LanguageModelV1FunctionToolSchema).readonly().optional(),
+    unstable_assistantMessageId: z.string().optional(),
   })
   .merge(LanguageModelV1CallSettingsSchema)
   .merge(LanguageModelConfigSchema);

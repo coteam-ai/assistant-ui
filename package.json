@@ -4,14 +4,15 @@
   "scripts": {
     "docs:dev": "pnpm --filter=@assistant-ui/docs dev",
     "ci:version": "changeset version && pnpm install --no-frozen-lockfile",
-    "ci:publish": "turbo build && changeset publish --force"
+    "ci:publish": "turbo build --filter=\"./packages/*\" && changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.8",
-    "eslint": "^8",
-    "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.6",
-    "turbo": "^2.1.2"
+    "@changesets/cli": "^2.27.11",
+    "eslint": "^9",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
   },
   "prettier": {
     "trailingComma": "all",
@@ -19,5 +20,9 @@
       "prettier-plugin-tailwindcss"
     ]
   },
-  "packageManager": "pnpm@9.11.0"
+  "packageManager": "pnpm@9.15.1",
+  "resolutions": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  }
 }

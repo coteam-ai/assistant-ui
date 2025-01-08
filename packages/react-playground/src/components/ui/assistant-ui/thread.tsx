@@ -6,11 +6,11 @@ import {
   MessagePrimitive,
   ThreadPrimitive,
   useComposer,
-  useComposerStore,
+  useComposerRuntime,
   useMessage,
-  useMessageStore,
+  useMessageRuntime,
   useThread,
-  useThreadActionsStore,
+  useThreadRuntime,
 } from "@assistant-ui/react";
 import { useState, type FC, type KeyboardEvent, type MouseEvent } from "react";
 import {
@@ -34,10 +34,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../dropdown-menu";
-import {
-  useGetPlaygroundRuntime,
-  usePlaygroundRuntime,
-} from "../../../lib/usePlaygroundRuntime";
+import { usePlaygroundRuntime } from "../../../lib/usePlaygroundRuntime";
 import { ToolUI } from "./tool-ui";
 import { Text } from "./text";
 import {
@@ -50,6 +47,7 @@ import {
 } from "../dialog";
 import { Input } from "../input";
 import { Image } from "./image";
+import { useShallow } from "zustand/shallow";
 
 export const Thread: FC = () => {
   return (
@@ -109,19 +107,22 @@ const Composer: FC = () => {
   const isRunning = useThread((t) => t.isRunning);
   const hasText = useComposer((c) => c.text.length > 0);
 
-  const threadActionsStore = useThreadActionsStore();
-  const composerStore = useComposerStore();
+  const threadRuntime = useThreadRuntime();
+  const composerRuntime = useComposerRuntime();
 
   const performAdd = () => {
-    const composer = composerStore.getState();
-    composer.send();
+    threadRuntime.append({
+      role,
+      content: [{ type: "text", text: composerRuntime.getState().text }],
+    });
+    composerRuntime.reset();
 
     setRole("user");
   };
 
   const performSubmit = () => {
     performAdd();
-    threadActionsStore.getState().startRun(null);
+    threadRuntime.startRun(null);
   };
 
   const handleAdd = (e: MouseEvent) => {
@@ -186,9 +187,11 @@ const Composer: FC = () => {
 };
 
 const AddToolCallButton = () => {
-  const messageStore = useMessageStore();
+  const messageRuntime = useMessageRuntime();
   const runtime = usePlaygroundRuntime();
-  const toolNames = runtime.useModelConfig((c) => Object.keys(c.tools ?? {}));
+  const toolNames = runtime.useModelConfig(
+    useShallow((c) => Object.keys(c.tools ?? {})),
+  );
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -207,7 +210,7 @@ const AddToolCallButton = () => {
             className="gap-2"
             onClick={() => {
               runtime.addTool({
-                messageId: messageStore.getState().message.id,
+                messageId: messageRuntime.getState().id,
                 toolName,
               });
             }}
@@ -222,15 +225,15 @@ const AddToolCallButton = () => {
 };
 
 const AddImageButton = () => {
-  const getPlaygroundRuntime = useGetPlaygroundRuntime();
-  const messageStore = useMessageStore();
+  const runtime = usePlaygroundRuntime();
+  const messageRuntime = useMessageRuntime();
 
   const [isOpen, setIsOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const handleAddImage = () => {
-    getPlaygroundRuntime().addImage({
+    runtime.addImage({
       image: new URL(imageUrl).href,
-      messageId: messageStore.getState().message.id,
+      messageId: messageRuntime.getState().id,
     });
     setIsOpen(false);
   };
@@ -264,20 +267,18 @@ const AddImageButton = () => {
 };
 
 const Message: FC = () => {
-  const getPlaygroundRuntime = useGetPlaygroundRuntime();
-  const messageStore = useMessageStore();
-  const role = useMessage((m) => m.message.role);
-  const status = useMessage((m) =>
-    m.message.role === "assistant" ? m.message.status : null,
-  );
+  const runtime = usePlaygroundRuntime();
+  const messageRuntime = useMessageRuntime();
+  const role = useMessage((m) => m.role);
+  const status = useMessage((m) => (m.role === "assistant" ? m.status : null));
 
   const handleDelete = () => {
-    getPlaygroundRuntime().deleteMessage(messageStore.getState().message.id);
+    runtime.deleteMessage(messageRuntime.getState().id);
   };
 
   const setRole = (role: "system" | "assistant" | "user") => {
-    getPlaygroundRuntime().setRole({
-      messageId: messageStore.getState().message.id,
+    runtime.setRole({
+      messageId: messageRuntime.getState().id,
       role,
     });
   };
@@ -313,7 +314,7 @@ const Message: FC = () => {
         />
       </div>
       {status?.type === "incomplete" && status.reason === "error" && (
-        <p className="text-aui-destructive flex items-center gap-2">
+        <p className="!border-aui-destructive flex items-center gap-2 rounded-lg border px-4 py-2">
           <InfoIcon className="size-4" />
           <span>
             Encountered an error:{" "}

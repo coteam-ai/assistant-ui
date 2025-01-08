@@ -8,16 +8,16 @@ import {
   forwardRef,
   ComponentPropsWithoutRef,
 } from "react";
-import { useComposerSend } from "../../primitive-hooks";
+import { useComposerSend } from "../../primitive-hooks/composer/useComposerSend";
 
-type ComposerPrimitiveRootElement = ElementRef<typeof Primitive.form>;
-type PrimitiveFormProps = ComponentPropsWithoutRef<typeof Primitive.form>;
-
-export type ComposerPrimitiveRootProps = PrimitiveFormProps;
+export namespace ComposerPrimitiveRoot {
+  export type Element = ElementRef<typeof Primitive.form>;
+  export type Props = ComponentPropsWithoutRef<typeof Primitive.form>;
+}
 
 export const ComposerPrimitiveRoot = forwardRef<
-  ComposerPrimitiveRootElement,
-  ComposerPrimitiveRootProps
+  ComposerPrimitiveRoot.Element,
+  ComposerPrimitiveRoot.Props
 >(({ onSubmit, ...rest }, forwardedRef) => {
   const send = useComposerSend();
 

@@ -8,15 +8,15 @@ import {
   useThreadViewportAutoScroll,
 } from "../../primitive-hooks/thread/useThreadViewportAutoScroll";
 
-type ThreadPrimitiveViewportElement = ElementRef<typeof Primitive.div>;
-type PrimitiveDivProps = ComponentPropsWithoutRef<typeof Primitive.div>;
-
-export type ThreadPrimitiveViewportProps = PrimitiveDivProps &
-  UseThreadViewportAutoScrollProps;
+export namespace ThreadPrimitiveViewport {
+  export type Element = ElementRef<typeof Primitive.div>;
+  export type Props = ComponentPropsWithoutRef<typeof Primitive.div> &
+    UseThreadViewportAutoScrollProps;
+}
 
 export const ThreadPrimitiveViewport = forwardRef<
-  ThreadPrimitiveViewportElement,
-  ThreadPrimitiveViewportProps
+  ThreadPrimitiveViewport.Element,
+  ThreadPrimitiveViewport.Props
 >(({ autoScroll, children, ...rest }, forwardedRef) => {
   const autoScrollRef = useThreadViewportAutoScroll<HTMLDivElement>({
     autoScroll,

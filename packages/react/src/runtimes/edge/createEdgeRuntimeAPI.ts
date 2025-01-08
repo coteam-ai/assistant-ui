@@ -5,11 +5,7 @@ import {
   LanguageModelV1Prompt,
   LanguageModelV1CallOptions,
 } from "@ai-sdk/provider";
-import {
-  CoreMessage,
-  ThreadMessage,
-  ThreadRoundtrip,
-} from "../../types/AssistantTypes";
+import { CoreMessage, ThreadStep } from "../../types/AssistantTypes";
 import { assistantEncoderStream } from "./streams/assistantEncoderStream";
 import { EdgeRuntimeRequestOptionsSchema } from "./EdgeRuntimeRequestOptions";
 import { toLanguageModelMessages } from "./converters/toLanguageModelMessages";
@@ -25,15 +21,14 @@ import {
   LanguageModelV1CallSettings,
   LanguageModelV1CallSettingsSchema,
 } from "../../types/ModelConfigTypes";
-import { ChatModelRunResult } from "../local";
-import { toCoreMessage } from "./converters/toCoreMessages";
+import { CoreChatModelRunResult } from "../local/ChatModelAdapter";
 import { streamPartEncoderStream } from "./streams/utils/streamPartEncoderStream";
 import { z } from "zod";
 
 type FinishResult = {
   messages: CoreMessage[];
   metadata: {
-    roundtrips: ThreadRoundtrip[];
+    steps: ThreadStep[];
   };
 };
 
@@ -122,7 +117,7 @@ export const getEdgeRuntimeStream = async ({
     abortSignal,
 
     ...(!!system ? { system } : undefined),
-    messages,
+    messages: [...messages],
     tools: lmServerTools.concat(clientTools as LanguageModelV1FunctionTool[]),
     ...(toolChoice ? { toolChoice } : undefined),
   });
@@ -141,7 +136,7 @@ export const getEdgeRuntimeStream = async ({
     let serverStream = tees[1];
 
     if (onFinish) {
-      let lastChunk: ChatModelRunResult;
+      let lastChunk: CoreChatModelRunResult | undefined;
       serverStream = serverStream.pipeThrough(runResultStream()).pipeThrough(
         new TransformStream({
           transform(chunk) {
@@ -153,17 +148,17 @@ export const getEdgeRuntimeStream = async ({
 
             const resultingMessages = [
               ...messages,
-              toCoreMessage({
+              {
                 role: "assistant",
                 content: lastChunk.content,
-              } as ThreadMessage),
+              } satisfies CoreMessage,
             ];
             onFinish({
               messages: resultingMessages,
               metadata: {
                 // TODO
                 // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-                roundtrips: lastChunk.metadata?.roundtrips!,
+                steps: lastChunk.metadata?.steps!,
               },
             });
           },

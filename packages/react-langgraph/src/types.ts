@@ -10,11 +10,38 @@ export type LangChainToolCall = {
   args: Record<string, unknown>;
 };
 
+type MessageContentText = {
+  type: "text";
+  text: string;
+};
+
+type MessageContentImageUrl = {
+  type: "image_url";
+  image_url: string | { url: string };
+};
+
+type MessageContentToolUse = {
+  type: "tool_use";
+};
+
+type UserMessageContentComplex = MessageContentText | MessageContentImageUrl;
+type AssistantMessageContentComplex =
+  | MessageContentText
+  | MessageContentToolUse;
+
+type UserMessageContent = string | UserMessageContentComplex[];
+type AssistantMessageContent = string | AssistantMessageContentComplex[];
+
 export type LangChainMessage =
   | {
       id?: string;
-      type: "human" | "system";
+      type: "system";
       content: string;
+    }
+  | {
+      id?: string;
+      type: "human";
+      content: UserMessageContent;
     }
   | {
       id?: string;
@@ -26,7 +53,7 @@ export type LangChainMessage =
   | {
       id?: string;
       type: "ai";
-      content: string;
+      content: AssistantMessageContent;
       tool_call_chunks?: LangChainToolCallChunk[];
       tool_calls?: LangChainToolCall[];
     };

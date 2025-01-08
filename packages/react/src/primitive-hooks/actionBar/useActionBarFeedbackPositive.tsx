@@ -1,19 +1,12 @@
 import { useCallback } from "react";
-import { useThreadActions } from "../../context/react/ThreadContext";
-import { useMessageStore, useMessageUtilsStore } from "../../context";
+import { useMessageRuntime } from "../../context";
 
 export const useActionBarFeedbackPositive = () => {
-  const threadActions = useThreadActions();
-  const messageStore = useMessageStore();
-  const messageUtilsStore = useMessageUtilsStore();
+  const messageRuntime = useMessageRuntime();
 
   const callback = useCallback(() => {
-    threadActions.submitFeedback({
-      messageId: messageStore.getState().message.id,
-      type: "positive",
-    });
-    messageUtilsStore.getState().setSubmittedFeedback("positive");
-  }, [messageStore, messageUtilsStore, threadActions]);
+    messageRuntime.submitFeedback({ type: "positive" });
+  }, [messageRuntime]);
 
   return callback;
 };

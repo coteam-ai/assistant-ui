@@ -3,10 +3,7 @@
 import { ComponentPropsWithoutRef, forwardRef, type FC } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-import {
-  TooltipIconButton,
-  TooltipIconButtonProps,
-} from "./base/tooltip-icon-button";
+import { TooltipIconButton } from "./base/tooltip-icon-button";
 import { withDefaults } from "./utils/withDefaults";
 import { useThreadConfig } from "./thread-config";
 import { BranchPickerPrimitive } from "../primitives";
@@ -19,7 +16,7 @@ const useAllowBranchPicker = (ensureCapability = false) => {
 };
 
 const BranchPicker: FC = () => {
-  const allowBranchPicker = useAllowBranchPicker();
+  const allowBranchPicker = useAllowBranchPicker(true);
   if (!allowBranchPicker) return null;
   return (
     <BranchPickerRoot hideWhenSingleBranch>
@@ -38,9 +35,14 @@ const BranchPickerRoot = withDefaults(BranchPickerPrimitive.Root, {
 
 BranchPickerRoot.displayName = "BranchPickerRoot";
 
+namespace BranchPickerPrevious {
+  export type Element = BranchPickerPrimitive.Previous.Element;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
 const BranchPickerPrevious = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
+  BranchPickerPrevious.Element,
+  BranchPickerPrevious.Props
 >((props, ref) => {
   const {
     strings: {
@@ -63,9 +65,14 @@ const BranchPickerStateWrapper = withDefaults("span", {
   className: "aui-branch-picker-state",
 });
 
+namespace BranchPickerState {
+  export type Element = HTMLSpanElement;
+  export type Props = ComponentPropsWithoutRef<"span">;
+}
+
 const BranchPickerState = forwardRef<
-  HTMLSpanElement,
-  ComponentPropsWithoutRef<"span">
+  BranchPickerState.Element,
+  BranchPickerState.Props
 >((props, ref) => {
   return (
     <BranchPickerStateWrapper {...props} ref={ref}>
@@ -76,9 +83,14 @@ const BranchPickerState = forwardRef<
 
 BranchPickerState.displayName = "BranchPickerState";
 
+namespace BranchPickerNext {
+  export type Element = BranchPickerPrimitive.Next.Element;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
 const BranchPickerNext = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
+  BranchPickerNext.Element,
+  BranchPickerNext.Props
 >((props, ref) => {
   const {
     strings: { branchPicker: { next: { tooltip = "Next" } = {} } = {} } = {},

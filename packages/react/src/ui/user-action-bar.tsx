@@ -3,10 +3,7 @@
 import { forwardRef, type FC } from "react";
 import { PencilIcon } from "lucide-react";
 
-import {
-  TooltipIconButton,
-  TooltipIconButtonProps,
-} from "./base/tooltip-icon-button";
+import { TooltipIconButton } from "./base/tooltip-icon-button";
 import { withDefaults } from "./utils/withDefaults";
 import { useThreadConfig } from "./thread-config";
 import { useThread } from "../context";
@@ -36,9 +33,14 @@ const UserActionBarRoot = withDefaults(ActionBarPrimitive.Root, {
 
 UserActionBarRoot.displayName = "UserActionBarRoot";
 
+namespace UserActionBarEdit {
+  export type Element = ActionBarPrimitive.Edit.Element;
+  export type Props = Partial<TooltipIconButton.Props>;
+}
+
 const UserActionBarEdit = forwardRef<
-  HTMLButtonElement,
-  Partial<TooltipIconButtonProps>
+  UserActionBarEdit.Element,
+  UserActionBarEdit.Props
 >((props, ref) => {
   const {
     strings: { userMessage: { edit: { tooltip = "Edit" } = {} } = {} } = {},

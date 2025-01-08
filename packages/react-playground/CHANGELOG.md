@@ -1,5 +1,307 @@
 # @assistant-ui/react-playground
 
+## 0.1.9
+
+### Patch Changes
+
+- 982a6a2: chore: update dependencies
+- Updated dependencies [982a6a2]
+  - @assistant-ui/react@0.7.30
+
+## 0.1.8
+
+### Patch Changes
+
+- 75a274f: feat: AssistantRuntimeCore.RenderComponent
+- Updated dependencies [75a274f]
+- Updated dependencies [dcf51cb]
+- Updated dependencies [9ad9e75]
+- Updated dependencies [75a274f]
+- Updated dependencies [65de5d6]
+  - @assistant-ui/react@0.7.29
+
+## 0.1.7
+
+### Patch Changes
+
+- 528cfd3: feat: ExternalStoreAdapter.unstable_Provider
+- Updated dependencies [528cfd3]
+- Updated dependencies [3c70ea1]
+  - @assistant-ui/react@0.7.27
+
+## 0.1.6
+
+### Patch Changes
+
+- feat: RunConfig
+- Updated dependencies
+  - @assistant-ui/react@0.7.22
+
+## 0.1.5
+
+### Patch Changes
+
+- ec3b8cc: chore: update dependencies
+- Updated dependencies [ec3b8cc]
+  - @assistant-ui/react@0.7.19
+
+## 0.1.4
+
+### Patch Changes
+
+- 4c54273: chore: update dependencies
+- Updated dependencies [4c54273]
+- Updated dependencies [4c54273]
+  - @assistant-ui/react@0.7.12
+
+## 0.1.3
+
+### Patch Changes
+
+- 2112ce8: chore: update dependencies
+- Updated dependencies [589d37b]
+- Updated dependencies [2112ce8]
+  - @assistant-ui/react@0.7.8
+
+## 0.1.2
+
+### Patch Changes
+
+- 933b8c0: chore: update deps
+- Updated dependencies [933b8c0]
+- Updated dependencies [09a2a38]
+  - @assistant-ui/react@0.7.6
+
+## 0.1.1
+
+### Patch Changes
+
+- c59d8b5: chore: update dependencies
+- Updated dependencies [c59d8b5]
+  - @assistant-ui/react@0.7.5
+
+## 0.1.0
+
+### Patch Changes
+
+- Updated dependencies [c6e886b]
+- Updated dependencies [2912fda]
+  - @assistant-ui/react@0.7.0
+
+## 0.0.48
+
+### Patch Changes
+
+- 1ada091: chore: update deps
+- Updated dependencies [cdcfe1e]
+- Updated dependencies [cdcfe1e]
+- Updated dependencies [94feab2]
+- Updated dependencies [472c548]
+- Updated dependencies [14da684]
+- Updated dependencies [1ada091]
+  - @assistant-ui/react@0.5.99
+
+## 0.0.47
+
+### Patch Changes
+
+- ff5b86c: fix: better ESM compatibility
+- ff5b86c: chore: update deps
+- Updated dependencies [ff5b86c]
+- Updated dependencies [ff5b86c]
+- Updated dependencies [ff5b86c]
+  - @assistant-ui/react@0.5.98
+
+## 0.0.46
+
+### Patch Changes
+
+- b6e7301: feat: dark mode support
+- b6e7301: fix: crash on message send
+- b6e7301: fix: role switcher
+- Updated dependencies [9a9c01d]
+  - @assistant-ui/react@0.5.97
+
+## 0.0.45
+
+### Patch Changes
+
+- d2375cd: build: disable bundling in UI package releases
+- Updated dependencies [d2375cd]
+  - @assistant-ui/react@0.5.93
+
+## 0.0.44
+
+### Patch Changes
+
+- 56f80fa: fix: tailwind plugin turbopack interop
+- Updated dependencies [56f80fa]
+  - @assistant-ui/react@0.5.91
+
+## 0.0.43
+
+### Patch Changes
+
+- bf8425c: fix: infinite rerender loop
+
+## 0.0.42
+
+### Patch Changes
+
+- b89ebd5: feat: loosen parsing strictness, add new converter strict mode flag
+- fb32e61: chore: update deps
+- fb32e61: feat: react-19 support
+- Updated dependencies [2090544]
+- Updated dependencies [be04b5b]
+- Updated dependencies [2090544]
+- Updated dependencies [fb32e61]
+- Updated dependencies [fb32e61]
+  - @assistant-ui/react@0.5.90
+
+## 0.0.41
+
+### Patch Changes
+
+- c38a018: feat: ThreadListRuntime
+- Updated dependencies [c38a018]
+  - @assistant-ui/react@0.5.83
+
+## 0.0.40
+
+### Patch Changes
+
+- 1aeda53: feat: Runtime.path API
+- Updated dependencies [0edadd1]
+- Updated dependencies [1aeda53]
+- Updated dependencies [0c8277e]
+- Updated dependencies [91d3951]
+- Updated dependencies [cf6861c]
+- Updated dependencies [7c76939]
+  - @assistant-ui/react@0.5.82
+
+## 0.0.39
+
+### Patch Changes
+
+- e2d3e56: fix: compat with latest main package version
+
+## 0.0.38
+
+### Patch Changes
+
+- c3806f8: fix: do not export internal Runtime types
+- 899b963: refactor: add BaseThreadRuntimeCore class
+- Updated dependencies [c3806f8]
+- Updated dependencies [899b963]
+- Updated dependencies [899b963]
+- Updated dependencies [899b963]
+- Updated dependencies [8c80f2a]
+- Updated dependencies [809c5c1]
+  - @assistant-ui/react@0.5.76
+
+## 0.0.37
+
+### Patch Changes
+
+- 31702b2: feat: MessageRuntime.stopSpeaking MessageState.speech state
+- Updated dependencies [31702b2]
+- Updated dependencies [44bfecd]
+  - @assistant-ui/react@0.5.75
+
+## 0.0.36
+
+### Patch Changes
+
+- fb46305: chore: update dependencies
+- Updated dependencies [fb46305]
+- Updated dependencies [e225116]
+- Updated dependencies [0ff22a7]
+- Updated dependencies [378ee99]
+- Updated dependencies [378ee99]
+  - @assistant-ui/react@0.5.73
+
+## 0.0.35
+
+### Patch Changes
+
+- e455aff: feat: FollowupSuggestions
+- Updated dependencies [55942d8]
+- Updated dependencies [e455aff]
+- Updated dependencies [f7c156b]
+- Updated dependencies [f6a832e]
+- Updated dependencies [2b7c6fe]
+  - @assistant-ui/react@0.5.71
+
+## 0.0.34
+
+### Patch Changes
+
+- 96b9d1f: feat: new Runtime API part 8
+- d8bd40b: chore: update dependencies
+- 42156cf: refactor: drop ReactThreadRuntimeCore, unstable_synchronizer
+- Updated dependencies [96b9d1f]
+- Updated dependencies [9fd85da]
+- Updated dependencies [d8bd40b]
+- Updated dependencies [42156cf]
+  - @assistant-ui/react@0.5.68
+
+## 0.0.33
+
+### Patch Changes
+
+- 70720ba: feat: lift EditComposer to runtime layer
+- Updated dependencies [cfa8844]
+- Updated dependencies [70720ba]
+  - @assistant-ui/react@0.5.67
+
+## 0.0.32
+
+### Patch Changes
+
+- 3f549b2: refactor: rename internal export
+- Updated dependencies [325b049]
+- Updated dependencies [df9ec8f]
+- Updated dependencies [3f549b2]
+  - @assistant-ui/react@0.5.66
+
+## 0.0.31
+
+### Patch Changes
+
+- 27208fb: fix: only include "use client" banner in ESM builds
+- Updated dependencies [27208fb]
+  - @assistant-ui/react@0.5.65
+
+## 0.0.30
+
+### Patch Changes
+
+- ed24305: fix: add newline after "use client" for .js builds
+- Updated dependencies [ed24305]
+  - @assistant-ui/react@0.5.64
+
+## 0.0.29
+
+### Patch Changes
+
+- c438773: feat: allow disabling ComposerInput keyboard shortcuts
+- e1ae3d0: chore: update dependencies
+- Updated dependencies [c438773]
+- Updated dependencies [e1ae3d0]
+  - @assistant-ui/react@0.5.63
+
+## 0.0.28
+
+### Patch Changes
+
+- 88957ac: feat: New unified Runtime API (part 1/n)
+- 3970adc: refactor: remove useGetPlaygroundRuntime
+- 1a99132: feat: ThreadRuntime.Composer subscribe
+- Updated dependencies [88957ac]
+- Updated dependencies [1a99132]
+- Updated dependencies [3187013]
+  - @assistant-ui/react@0.5.61
+
 ## 0.0.27
 
 ### Patch Changes

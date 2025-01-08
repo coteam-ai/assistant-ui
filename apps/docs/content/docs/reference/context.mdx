@@ -1,23 +1,14 @@
 ---
-title: Context API
+title: Runtime API
 ---
 
-assistant-ui components and APIs use React Context to store information and interact with the runtime.
-
-The context is split into four hierarchies:
-
-- **Assistant Context**: Wraps your entire app. An app can contain multiple threads.
-- **Thread Context**: Provides access to the thread state. A thread can contain multiple messages.
-- **Message Context**: Provides access to the message state. A message can contain multiple content parts.
-- **Content Part Context**: Provides access to the content part state.
+The runtime API allows you to interact with the runtime in a standardized way.
+This API is used internaly by the components. You can also use it to build your own UI components or functionality.
 
 import { ParametersTable } from "@/components/docs";
 import {
-  AssistantActionsState,
-  AssistantToolUIsState,
-  ThreadState,
   ThreadMessagesState,
-  ThreadActionsState,
+  ThreadRuntimeState,
   ComposerState,
   EditComposerState,
   ThreadViewportState,
@@ -27,19 +18,34 @@ import {
   ComposerAttachmentState,
   MessageAttachmentState,
 } from "@/components/docs/parameters/context";
+import {
+  AssistantRuntime,
+  ThreadListRuntime,
+  ThreadListState,
+  ThreadListItemRuntime,
+  ThreadListItemState,
+  ThreadRuntime,
+  ThreadState,
+  AssistantToolUIsState,
+} from "@/generated/typeDocs";
 
-## Assistant Context
+## AssistantRuntime
 
-#### `useAssistantActions`
+The `AssistantRuntime` is the root runtime.
+
+### `useAssistantRuntime`
 
 ```tsx
-import { useAssistantActions } from "@assistant-ui/react";
+import { useAssistantRuntime } from "@assistant-ui/react";
 
-const actions = useAssistantActions();
-const switchToNewThread = useAssistantActions((m) => m.switchToThread);
+const runtime = useAssistantRuntime();
 ```
 
-<ParametersTable {...AssistantActionsState} />
+<ParametersTable {...AssistantRuntime} />
+
+## Tool UI Registry
+
+The tool UI registry is used to display custom UI for tool calls, enabling generative UI.
 
 ### `useToolUIs`
 
@@ -47,12 +53,66 @@ const switchToNewThread = useAssistantActions((m) => m.switchToThread);
 import { useToolUIs } from "@assistant-ui/react";
 
 const toolUIs = useToolUIs();
-const getToolUI = useToolUIs((m) => m.getToolUI);
+const webSearchToolUI = useToolUIs((m) => m.getToolUI("web_search"));
 ```
 
 <ParametersTable {...AssistantToolUIsState} />
 
+## ThreadListRuntime
+
+### `threadList`
+
+```tsx
+import { useAssistantRuntime } from "@assistant-ui/react";
+
+const threadListRuntime = useAssistantRuntime().threadList;
+```
+
+<ParametersTable {...ThreadListRuntime} />
+
+### `useThreadList`
+
+```tsx
+import { useThreadList } from "@assistant-ui/react";
+
+const threadList = useThreadList();
+const threads = useThreadList((m) => m.threads);
+```
+
+## ThreadListItemRuntime
+
+### `useThreadListItemRuntime`
+
+```tsx
+import { useThreadListItemRuntime } from "@assistant-ui/react";
+
+const threadListItemRuntime = useThreadListItemRuntime();
+```
+
+<ParametersTable {...ThreadListItemRuntime} />
+
+### `useThreadListItem`
+
+```tsx
+import { useThreadListItem } from "@assistant-ui/react";
+
+const threadListItem = useThreadListItem();
+const title = useThreadListItem((m) => m.title);
+```
+
+<ParametersTable {...ThreadListItemState} />
+
 ## Thread Context
+
+### `useThreadRuntime`
+
+```tsx
+import { useThreadRuntime } from "@assistant-ui/react";
+
+const thread = useThreadRuntime();
+```
+
+<ParametersTable {...ThreadRuntime} />
 
 ### `useThread`
 
@@ -75,25 +135,6 @@ const firstMessage = useThreadMessages((m) => m[0]);
 ```
 
 <ParametersTable {...ThreadMessagesState} />
-
-### `useThreadActions`
-
-```tsx
-import { useThreadActions } from "@assistant-ui/react";
-
-const actions = useThreadActions();
-const getBranches = useThreadActions((m) => m.getBranches);
-```
-
-<ParametersTable {...ThreadActionsState} />
-
-### `useThreadRuntime`
-
-```tsx
-import { useThreadRuntime } from "@assistant-ui/react";
-
-const runtime = useThreadRuntime();
-```
 
 ### `useThreadComposer`
 
@@ -159,8 +200,8 @@ const text = useEditComposer((m) => m.text);
 ```tsx
 import { useContentPart } from "@assistant-ui/react";
 
-const part = useContentPart((m) => m.part);
-const part = useContentPart.getState().part;
+const part = useContentPart();
+const part = useContentPart.getState();
 
 const status = useContentPart((m) => m.status);
 const status = useContentPart.getState().status;

@@ -1,23 +1,15 @@
 import { create } from "zustand";
-import { SpeechSynthesisAdapter } from "../../runtimes/speech/SpeechAdapterTypes";
 
-export type MessageUtilsState = Readonly<{
-  isCopied: boolean;
-  setIsCopied: (value: boolean) => void;
-  isHovering: boolean;
-  setIsHovering: (value: boolean) => void;
+export type MessageUtilsState = {
+  readonly isCopied: boolean;
+  readonly setIsCopied: (value: boolean) => void;
 
-  isSpeaking: boolean;
-  stopSpeaking: () => void;
-  addUtterance: (utterance: SpeechSynthesisAdapter.Utterance) => void;
-
-  submittedFeedback: "positive" | "negative" | null;
-  setSubmittedFeedback: (feedback: "positive" | "negative" | null) => void;
-}>;
+  readonly isHovering: boolean;
+  readonly setIsHovering: (value: boolean) => void;
+};
 
 export const makeMessageUtilsStore = () =>
   create<MessageUtilsState>((set) => {
-    let utterance: SpeechSynthesisAdapter.Utterance | null = null;
     return {
       isCopied: false,
       setIsCopied: (value) => {
@@ -26,21 +18,6 @@ export const makeMessageUtilsStore = () =>
       isHovering: false,
       setIsHovering: (value) => {
         set({ isHovering: value });
-      },
-      isSpeaking: false,
-      stopSpeaking: () => {
-        utterance?.cancel();
-      },
-      addUtterance: (utt) => {
-        utterance = utt;
-        set({ isSpeaking: true });
-        utt.onEnd(() => {
-          set({ isSpeaking: false });
-        });
-      },
-      submittedFeedback: null,
-      setSubmittedFeedback: (feedback) => {
-        set({ submittedFeedback: feedback });
       },
     };
   });

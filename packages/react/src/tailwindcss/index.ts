@@ -1,4 +1,9 @@
-import plugin from "tailwindcss/plugin";
+import plugin from "tailwindcss/plugin.js";
+import baseComponentsCSS from "../../dist/styles/tailwindcss/base-components.css.json";
+import threadCSS from "../../dist/styles/tailwindcss/thread.css.json";
+import modalCSS from "../../dist/styles/tailwindcss/modal.css.json";
+import defaultThemeCSS from "../../dist/styles/themes/default.css.json";
+import shadcnExtrasCSS from "../../dist/styles/themes/shadcn-extras.css.json";
 
 type AssistantTailwindPluginColors = {
   border: string;
@@ -54,35 +59,33 @@ const auiPlugin = plugin.withOptions<AssisstantTailwindPluginOptions>(
         throw new Error("default-theme cannot be used with shadcn");
 
       if (defaultTheme || (base && !shadcn)) {
-        addComponents({
-          '@import "@assistant-ui/react/styles/themes/default.css"': "",
-        });
+        addComponents(defaultThemeCSS);
+      }
+      if (!defaultTheme && base && shadcn) {
+        addComponents(shadcnExtrasCSS);
       }
 
       if (base) {
-        addComponents({
-          '@import "@assistant-ui/react/styles/tailwindcss/base-components.css"':
-            "",
-        });
+        addComponents(baseComponentsCSS);
       }
 
       if (thread) {
-        addComponents({
-          '@import "@assistant-ui/react/styles/tailwindcss/thread.css"': "",
-        });
+        addComponents(threadCSS);
       }
 
       if (assistantModal) {
-        addComponents({
-          '@import "@assistant-ui/react/styles/tailwindcss/modal.css"': "",
-        });
+        addComponents(modalCSS);
       }
     },
   ({ shadcn = false, colors = {} } = {}) => {
     const prefix = !shadcn ? "--aui-" : "--";
     return {
+      safelist: [{ pattern: /aui-/ }],
       theme: {
         extend: {
+          maxWidth: {
+            "aui-thread": "var(--aui-thread-max-width)",
+          },
           colors: {
             aui: {
               border: colors.border ?? `hsl(var(${prefix}border))`,

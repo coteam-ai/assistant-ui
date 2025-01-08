@@ -7,13 +7,14 @@ import { composeEventHandlers } from "@radix-ui/primitive";
 import { Primitive } from "@radix-ui/react-primitive";
 import { useMessageUtils } from "../../context";
 
-export type ActionBarPrimitiveCopyProps = ActionButtonProps<
-  typeof useActionBarCopy
->;
+export namespace ActionBarPrimitiveCopy {
+  export type Element = HTMLButtonElement;
+  export type Props = ActionButtonProps<typeof useActionBarCopy>;
+}
 
 export const ActionBarPrimitiveCopy = forwardRef<
-  HTMLButtonElement,
-  Partial<ActionBarPrimitiveCopyProps>
+  ActionBarPrimitiveCopy.Element,
+  ActionBarPrimitiveCopy.Props
 >(({ copiedDuration, onClick, disabled, ...props }, forwardedRef) => {
   const isCopied = useMessageUtils((u) => u.isCopied);
   const callback = useActionBarCopy({ copiedDuration });

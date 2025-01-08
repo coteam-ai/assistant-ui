@@ -6,16 +6,18 @@ import BranchPicker from "./branch-picker";
 import { withDefaults } from "./utils/withDefaults";
 import UserActionBar from "./user-action-bar";
 import ContentPart from "./content-part";
-import { MessagePrimitive, MessagePrimitiveContentProps } from "../primitives";
-import UserMessageAttachment from "./user-message-attachment";
-import { MessagePrimitiveAttachmentsProps } from "../primitives/message/MessageAttachments";
+import { MessagePrimitive } from "../primitives";
+import Attachment from "./attachment-ui";
 
 const UserMessage: FC = () => {
   return (
     <UserMessageRoot>
       <UserMessageAttachments />
-      <UserActionBar />
-      <UserMessageContent />
+      {/* TODO this is temporary until we place the UserActionBar in a better place */}
+      <MessagePrimitive.If hasContent>
+        <UserActionBar />
+        <UserMessageContent />
+      </MessagePrimitive.If>
       <BranchPicker />
     </UserMessageRoot>
   );
@@ -33,23 +35,27 @@ const UserMessageContentWrapper = withDefaults("div", {
   className: "aui-user-message-content",
 });
 
-export type UserMessageContentProps = MessagePrimitiveContentProps &
-  ComponentPropsWithoutRef<"div">;
+namespace UserMessageContent {
+  export type Element = HTMLDivElement;
+  export type Props = MessagePrimitive.Content.Props &
+    ComponentPropsWithoutRef<"div">;
+}
 
-const UserMessageContent = forwardRef<HTMLDivElement, UserMessageContentProps>(
-  ({ components, ...props }, ref) => {
-    return (
-      <UserMessageContentWrapper {...props} ref={ref}>
-        <MessagePrimitive.Content
-          components={{
-            ...components,
-            Text: components?.Text ?? ContentPart.Text,
-          }}
-        />
-      </UserMessageContentWrapper>
-    );
-  },
-);
+const UserMessageContent = forwardRef<
+  UserMessageContent.Element,
+  UserMessageContent.Props
+>(({ components, ...props }, ref) => {
+  return (
+    <UserMessageContentWrapper {...props} ref={ref}>
+      <MessagePrimitive.Content
+        components={{
+          ...components,
+          Text: components?.Text ?? ContentPart.Text,
+        }}
+      />
+    </UserMessageContentWrapper>
+  );
+});
 
 UserMessageContent.displayName = "UserMessageContent";
 
@@ -57,10 +63,11 @@ const UserMessageAttachmentsContainer = withDefaults("div", {
   className: "aui-user-message-attachments",
 });
 
-export type UserMessageAttachmentsProps =
-  Partial<MessagePrimitiveAttachmentsProps>;
+namespace UserMessageAttachments {
+  export type Props = Partial<MessagePrimitive.Attachments.Props>;
+}
 
-const UserMessageAttachments: FC<UserMessageAttachmentsProps> = ({
+const UserMessageAttachments: FC<UserMessageAttachments.Props> = ({
   components,
 }) => {
   return (
@@ -69,7 +76,7 @@ const UserMessageAttachments: FC<UserMessageAttachmentsProps> = ({
         <MessagePrimitive.Attachments
           components={{
             ...components,
-            Attachment: components?.Attachment ?? UserMessageAttachment,
+            Attachment: components?.Attachment ?? Attachment,
           }}
         />
       </UserMessageAttachmentsContainer>

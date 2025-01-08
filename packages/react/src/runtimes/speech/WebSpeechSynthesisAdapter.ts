@@ -1,13 +1,10 @@
-import { ThreadMessage } from "../../types";
-import { getThreadMessageText } from "../../utils/getThreadMessageText";
 import { SpeechSynthesisAdapter } from "./SpeechAdapterTypes";
 
 export class WebSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
-  speak(message: ThreadMessage): SpeechSynthesisAdapter.Utterance {
-    const text = getThreadMessageText(message);
+  speak(text: string): SpeechSynthesisAdapter.Utterance {
     const utterance = new SpeechSynthesisUtterance(text);
 
-    const endHandlers = new Set<() => void>();
+    const subscribers = new Set<() => void>();
     const handleEnd = (
       reason: "finished" | "error" | "cancelled",
       error?: unknown,
@@ -15,7 +12,7 @@ export class WebSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
       if (res.status.type === "ended") return;
 
       res.status = { type: "ended", reason, error };
-      endHandlers.forEach((handler) => handler());
+      subscribers.forEach((handler) => handler());
     };
 
     utterance.addEventListener("end", () => handleEnd("finished"));
@@ -29,7 +26,7 @@ export class WebSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
         window.speechSynthesis.cancel();
         handleEnd("cancelled");
       },
-      onEnd: (callback) => {
+      subscribe: (callback) => {
         if (res.status.type === "ended") {
           let cancelled = false;
           queueMicrotask(() => {
@@ -39,9 +36,9 @@ export class WebSpeechSynthesisAdapter implements SpeechSynthesisAdapter {
             cancelled = true;
           };
         } else {
-          endHandlers.add(callback);
+          subscribers.add(callback);
           return () => {
-            endHandlers.delete(callback);
+            subscribers.delete(callback);
           };
         }
       },

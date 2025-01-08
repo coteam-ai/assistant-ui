@@ -1,4 +1,11 @@
 export type {
+  Attachment,
+  PendingAttachment,
+  CompleteAttachment,
+  AttachmentStatus,
+} from "./AttachmentTypes";
+
+export type {
   AppendMessage,
   TextContentPart,
   ImageContentPart,
@@ -21,6 +28,9 @@ export type {
   CoreUserMessage,
   CoreAssistantMessage,
   CoreMessage,
+
+  // TODO
+  Unstable_AudioContentPart,
 } from "./AssistantTypes";
 
 export type {
@@ -34,6 +44,8 @@ export type {
   UIContentPartComponent,
   ToolCallContentPartProps,
   ToolCallContentPartComponent,
+  Unstable_AudioContentPartProps,
+  Unstable_AudioContentPartComponent,
 } from "./ContentPartComponentTypes";
 
 export type {

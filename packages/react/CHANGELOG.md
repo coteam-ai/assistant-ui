@@ -1,5 +1,493 @@
 # @assistant-ui/react
 
+## 0.7.33
+
+### Patch Changes
+
+- bb47b90: fix: invalid JSON in argsText should be gracefully handled
+
+## 0.7.32
+
+### Patch Changes
+
+- feat: MessagePrimitive.tools.Override
+
+## 0.7.31
+
+### Patch Changes
+
+- fix: data results should be forwarded via LocalThreadRuntime
+
+## 0.7.30
+
+### Patch Changes
+
+- 982a6a2: chore: update dependencies
+
+## 0.7.29
+
+### Patch Changes
+
+- 75a274f: feat: AssistantRuntimeCore.RenderComponent
+- dcf51cb: fix: do not throw on AI SDK annotation packets
+- 9ad9e75: fix: mark arrays in message types as readonly
+- 75a274f: refactor: drop AssistantRuntimeCore.Provider due to causing app rerenders on runtime switch
+- 65de5d6: feat: message.metadata.unstable_data
+
+## 0.7.28
+
+### Patch Changes
+
+- a8ac203: feat: export useThreadListItemRuntime
+
+## 0.7.27
+
+### Patch Changes
+
+- 528cfd3: feat: ExternalStoreAdapter.unstable_Provider
+- 3c70ea1: feat: allow customizing thread max width
+
+## 0.7.26
+
+### Patch Changes
+
+- 6a17ec2: feat: useAssistantInstructions disable support
+
+## 0.7.25
+
+### Patch Changes
+
+- 798e9f3: fix: AttachmentRemove should not trigger AttachmentPreviewDialog
+- 37e1abc: feat: ComposerRuntime.clearAttachments
+- d6b3b79: feat: useRemoteThreadListRuntime
+
+## 0.7.24
+
+### Patch Changes
+
+- fix: ComposerRuntime.send() should not reset role or runConfig
+
+## 0.7.23
+
+### Patch Changes
+
+- feat(edge-runtime): pass RunConfig to backend
+
+## 0.7.22
+
+### Patch Changes
+
+- feat: RunConfig
+
+## 0.7.21
+
+### Patch Changes
+
+- feat: Composer.unstable_on("send", callback)
+
+## 0.7.20
+
+### Patch Changes
+
+- 2c7dec0: feat: useAssistantTool allow disabling tools
+
+## 0.7.19
+
+### Patch Changes
+
+- ec3b8cc: chore: update dependencies
+
+## 0.7.18
+
+### Patch Changes
+
+- 1b16dce: fix: thread initialization
+- b0f309a: feat: allow specifying Empty component in thread-config
+
+## 0.7.17
+
+### Patch Changes
+
+- fix: toLanguageModelMessages should include attachments
+
+## 0.7.16
+
+### Patch Changes
+
+- fix: ensure message status is set on runResultStream flush
+
+## 0.7.15
+
+### Patch Changes
+
+- fix: toolResultStream should support JSONSchema params
+
+## 0.7.14
+
+### Patch Changes
+
+- fix: assistantDecoderStream should end current tool call on flush
+
+## 0.7.12
+
+### Patch Changes
+
+- 4c54273: chore: update dependencies
+- 4c54273: fix: initialize thread on import
+
+## 0.7.11
+
+### Patch Changes
+
+- 0f88efb: fix: external store thread list should not crash
+
+## 0.7.10
+
+### Patch Changes
+
+- 1eab7b4: refactor: ThreadList
+
+## 0.7.9
+
+### Patch Changes
+
+- 2276e57: fix: cjs builds
+- e8752ac: fix: ThreadList a11y improvements
+
+## 0.7.8
+
+### Patch Changes
+
+- 589d37b: feat: ThreadList / ThreadListItem UI
+- 2112ce8: chore: update dependencies
+
+## 0.7.7
+
+### Patch Changes
+
+- 10d70db: fix: remove console.log
+- c3027a0: fix: disallow nested ThreadConfigs
+
+## 0.7.6
+
+### Patch Changes
+
+- 933b8c0: chore: update deps
+- 09a2a38: fix: TextContentPartProvider should support contentPartRuntime.getState()
+
+## 0.7.5
+
+### Patch Changes
+
+- c59d8b5: chore: update dependencies
+
+## 0.7.4
+
+### Patch Changes
+
+- 5462390: fix: Thread.Messages AssistantEditComposer support
+- 0fb80c1: feat: ThreadConfig.UserMessage / AssistantMessage / EditComposer
+
+## 0.7.3
+
+### Patch Changes
+
+- 0dcd9cf: feat: mark message types as readonly
+
+## 0.7.2
+
+### Patch Changes
+
+- 7fa9a1b: feat: ThreadMessageLike metadata support
+- 1a1f4a5: feat: message metadata for all message types
+
+## 0.7.1
+
+### Patch Changes
+
+- c2f75e5: feat: ThreadListRuntime API types
+
+## 0.7.0
+
+### Breaking Changes
+
+- c6e886b: refactor!: drop deprecated features
+
+### Patch Changes
+
+- 2912fda: feat: ThreadListItemPrimitive
+
+## 0.5.100
+
+### Patch Changes
+
+- b5f92fe: fix(external-store): crash on cancel when using separate converter, fix branching
+
+## 0.5.99
+
+### Patch Changes
+
+- cdcfe1e: feat: ThreadListItemPrimitive (wip)
+- cdcfe1e: fix: add React 19 RC to peerDeps
+- 94feab2: feat: ComposerState.role / ComposerRuntime.setRole
+- 472c548: feat: ThreadListPrimitive
+- 14da684: feat: AppendMessage.startRun flag
+- 1ada091: chore: update deps
+
+## 0.5.98
+
+### Patch Changes
+
+- ff5b86c: build: refactor build script into @assistant-ui/tsbuildutils
+- ff5b86c: fix: better ESM compatibility
+- ff5b86c: chore: update deps
+
+## 0.5.97
+
+### Patch Changes
+
+- 9a9c01d: feat(edge-runtime): add unstable_AISDKInterop flag
+
+## 0.5.96
+
+### Patch Changes
+
+- fix: properly pass initialMessages to LocalRuntime
+
+## 0.5.95
+
+### Patch Changes
+
+- fix: include generated css files in bundle
+
+## 0.5.94
+
+### Patch Changes
+
+- fix: toContentPartStatus support for parallel tool calls
+
+## 0.5.93
+
+### Patch Changes
+
+- d2375cd: build: disable bundling in UI package releases
+
+## 0.5.92
+
+### Patch Changes
+
+- f6d197a: feat: Edge Runtime Server Accessible Ids (temp)
+
+## 0.5.91
+
+### Patch Changes
+
+- 56f80fa: fix: tailwind plugin turbopack interop
+
+## 0.5.90
+
+### Patch Changes
+
+- 2090544: fix: attachments infinite rerender bug
+- be04b5b: feat: Unstable_AudioContentPart (wip)
+- 2090544: fix: Attachment preview accessibility
+- fb32e61: chore: update deps
+- fb32e61: feat: react-19 support
+
+## 0.5.89
+
+### Patch Changes
+
+- fd9ff67: fix(local-runtime): update capabilities on initial render
+
+## 0.5.88
+
+### Patch Changes
+
+- 0afecda: fix(ai-sdk): server-side maxSteps interop
+
+## 0.5.87
+
+### Patch Changes
+
+- b38165d: feat: export useAttachmentRuntime, useAttachment, FeedbackAdapter
+- a1bfd26: fix(ai-sdk): DataStream interop without tool call streaming
+- b38165d: feat(ai-sdk): Adapters support (attachment, feedback, speech, threadManager)
+
+## 0.5.86
+
+### Patch Changes
+
+- fix: do not cache adapter in useEdgeRuntime
+
+## 0.5.85
+
+### Patch Changes
+
+- 3a602b9: fix: correctly handle new thread creation
+
+## 0.5.84
+
+### Patch Changes
+
+- ba5116f: feat: useInlineRender hook
+
+## 0.5.83
+
+### Patch Changes
+
+- c38a018: feat: ThreadListRuntime
+
+## 0.5.82
+
+### Patch Changes
+
+- 0edadd1: feat: useThreadModelConfig API
+- 1aeda53: feat: Runtime.path API
+- 0c8277e: feat: MessageRuntime.unstable_getCopyText API
+- 91d3951: feat: MessageRuntime.getContentPartByToolCallId
+- cf6861c: refactor!: simplify SpeechSynthesisAdapter to accept a text string
+- 7c76939: feat: ThreadRuntime.getMesssageById
+
+## 0.5.79
+
+### Patch Changes
+
+- feat: allow out of order tool args streaming
+
+## 0.5.78
+
+### Patch Changes
+
+- dba0082: fix: border should apply to all aui-root children
+- b182ea5: feat: Events API (experimental)
+
+## 0.5.77
+
+### Patch Changes
+
+- 0a3bd06: feat: Attachment image thumbnail and previews
+
+## 0.5.76
+
+### Patch Changes
+
+- c3806f8: fix: do not export internal Runtime types
+- 899b963: refactor: add BaseThreadRuntimeCore class
+- 899b963: feat: work towards Edit Composer attachment support
+- 899b963: refactor: remove composerState.attachmentAccept, add composerRuntime.getAttachmentAccept()
+- 8c80f2a: feat: MessageState.submittedFeedback state
+- 809c5c1: feat: New Attachment UI
+
+## 0.5.75
+
+### Patch Changes
+
+- 31702b2: feat: MessageRuntime.stopSpeaking MessageState.speech state
+- 44bfecd: refactor: move primitive types under the same namespace as the primitive components
+
+## 0.5.74
+
+### Patch Changes
+
+- 3d31f10: refactor: deprecate primitive-hooks
+- cf872da: feat: AttachmentPrimitive
+
+## 0.5.73
+
+### Patch Changes
+
+- fb46305: chore: update dependencies
+- e225116: feat(ui): add component override option for ThreadWelcome
+- 0ff22a7: feat: switch to DataStream transfer protocol for edge runtime
+- 378ee99: refactor: rename maxToolRoundtrips to maxSteps
+- 378ee99: feat: server-side tool roundtrips support
+
+## 0.5.72
+
+### Patch Changes
+
+- d0db602: fix: useDangerousInBrowserRuntime correct options forwarding
+
+## 0.5.71
+
+### Patch Changes
+
+- 55942d8: fix: useContentPartText backwards compat type
+- e455aff: feat: FollowupSuggestions
+- f7c156b: feat: mark new runtime API methods as stable
+- f6a832e: chore: update dependencies
+- 2b7c6fe: refactor: define interface types for the new runtime API
+
+## 0.5.70
+
+### Patch Changes
+
+- 3df0061: fix: TextContentPartProvider missing fields
+
+## 0.5.69
+
+### Patch Changes
+
+- 46f91c2: feat(langgraph): allow disabling autocancellation of pending tool calls
+
+## 0.5.68
+
+### Patch Changes
+
+- 96b9d1f: feat: new Runtime API part 8
+- 9fd85da: fix: ensure branch picker is supported before showing it
+- d8bd40b: chore: update dependencies
+- 42156cf: refactor: drop ReactThreadRuntimeCore, unstable_synchronizer
+
+## 0.5.67
+
+### Patch Changes
+
+- cfa8844: feat: useComposerRuntime hook
+- 70720ba: feat: lift EditComposer to runtime layer
+
+## 0.5.66
+
+### Patch Changes
+
+- 325b049: fix: include attachments prop in the useExternalMessageConverter
+- df9ec8f: feat: new Runtime API rollout part 2
+- 3f549b2: refactor: rename internal export
+
+## 0.5.65
+
+### Patch Changes
+
+- 27208fb: fix: only include "use client" banner in ESM builds
+
+## 0.5.64
+
+### Patch Changes
+
+- ed24305: fix: add newline after "use client" for .js builds
+
+## 0.5.63
+
+### Patch Changes
+
+- c438773: feat: allow disabling ComposerInput keyboard shortcuts
+- e1ae3d0: chore: update dependencies
+
+## 0.5.62
+
+### Patch Changes
+
+- cd1b286: fix: BranchPicker styles
+
+## 0.5.61
+
+### Patch Changes
+
+- 88957ac: feat: New unified Runtime API (part 1/n)
+- 1a99132: feat: ThreadRuntime.Composer subscribe
+- 3187013: feat: add status, attachments and metadata fields to all messages
+
 ## 0.5.60
 
 ### Patch Changes

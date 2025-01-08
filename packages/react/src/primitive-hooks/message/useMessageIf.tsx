@@ -1,6 +1,6 @@
 "use client";
 import {
-  useMessageStore,
+  useMessageRuntime,
   useMessageUtilsStore,
 } from "../../context/react/MessageContext";
 import type { RequireAtLeastOne } from "../../utils/RequireAtLeastOne";
@@ -15,49 +15,61 @@ type MessageIfFilters = {
   lastOrHover: boolean | undefined;
   speaking: boolean | undefined;
   hasAttachments: boolean | undefined;
+  hasContent: boolean | undefined;
   submittedFeedback: "positive" | "negative" | null | undefined;
 };
 export type UseMessageIfProps = RequireAtLeastOne<MessageIfFilters>;
 
 export const useMessageIf = (props: UseMessageIfProps) => {
-  const messageStore = useMessageStore();
+  const messageRuntime = useMessageRuntime();
   const messageUtilsStore = useMessageUtilsStore();
 
   return useCombinedStore(
-    [messageStore, messageUtilsStore],
+    [messageRuntime, messageUtilsStore],
     (
-      { message, branches, isLast },
-      { isCopied, isHovering, isSpeaking, submittedFeedback },
+      {
+        role,
+        attachments,
+        content,
+        branchCount,
+        isLast,
+        speech,
+        submittedFeedback,
+      },
+      { isCopied, isHovering },
     ) => {
-      if (props.hasBranches === true && branches.length < 2) return false;
+      if (props.hasBranches === true && branchCount < 2) return false;
 
-      if (props.user && message.role !== "user") return false;
-      if (props.assistant && message.role !== "assistant") return false;
-      if (props.system && message.role !== "system") return false;
+      if (props.user && role !== "user") return false;
+      if (props.assistant && role !== "assistant") return false;
+      if (props.system && role !== "system") return false;
 
       if (props.lastOrHover === true && !isHovering && !isLast) return false;
 
       if (props.copied === true && !isCopied) return false;
       if (props.copied === false && isCopied) return false;
 
-      if (props.speaking === true && !isSpeaking) return false;
-      if (props.speaking === false && isSpeaking) return false;
+      if (props.speaking === true && speech == null) return false;
+      if (props.speaking === false && speech != null) return false;
 
       if (
         props.hasAttachments === true &&
-        (message.role !== "user" || !message.attachments.length)
+        (role !== "user" || !attachments.length)
       )
         return false;
       if (
         props.hasAttachments === false &&
-        message.role === "user" &&
-        !!message.attachments.length
+        role === "user" &&
+        !!attachments.length
       )
         return false;
 
+      if (props.hasContent === true && content.length === 0) return false;
+      if (props.hasContent === false && content.length > 0) return false;
+
       if (
         props.submittedFeedback !== undefined &&
-        submittedFeedback !== props.submittedFeedback
+        (submittedFeedback?.type ?? null) !== props.submittedFeedback
       )
         return false;
 
